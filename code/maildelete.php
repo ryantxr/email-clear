@@ -1,11 +1,16 @@
 <?php
 require 'vendor/autoload.php';
 use App\MailDeleter;
+use Dotenv\Dotenv;
 // IMAP server details
 $host = 'imap.gmail.com';
 $port = '993';
-$username = GET FROM .env
-$password = GET FROM .env
+
+// Load credentials from the local .env file
+$dotenv = Dotenv::createImmutable(__DIR__);
+$dotenv->safeLoad();
+$username = $_ENV['USERNAME'] ?? null;
+$password = $_ENV['PASSWORD'] ?? null;
 
 try {
 
