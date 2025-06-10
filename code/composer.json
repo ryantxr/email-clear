@@ -6,7 +6,8 @@
         "webklex/php-imap": "^6.2",
         "monolog/monolog": "^3.9",
         "nesbot/carbon": "^3.9",
-        "vlucas/phpdotenv": "^5.6"
+        "vlucas/phpdotenv": "^5.6",
+        "guzzlehttp/guzzle": "^7.4"
     },
     "require-dev": {
         "phpunit/phpunit": "^12.2"
