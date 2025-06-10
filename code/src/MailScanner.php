@@ -98,6 +98,9 @@ class MailScanner
         $query = $inbox->messages()->unseen();
         if ($lastScan) {
             $query = $query->since($lastScan);
+        } else {
+            $minScan = Carbon::now()->subDays(2);
+            $query = $query->since($minScan);
         }
         $messages = $query->get();
         $mostRecent = $lastScan;
