@@ -4,11 +4,14 @@ This repository provides a few simple utilities for connecting to an IMAP inbox.
 
 ## Fetching a single email
 
-The `code/mailfetch.php` script can be used to verify that the application is able to connect to your mailbox. It will retrieve the latest email from the `INBOX` folder and print its subject.
+The `code/mailfetch.php` script can be used to verify that the application is able to connect to your mailbox using IMAP. It reads an OAuth2 access token from `code/data/token.json` and refreshes it when needed.
 
-1. Copy `code/.env.example` to `code/.env` and provide your IMAP credentials.
-2. Install dependencies with `composer install --no-dev --ignore-platform-reqs`.
-3. Run the script:
+1. Copy `code/.env.example` to `code/.env` and set the `USERNAME` variable to
+   your Gmail address.
+2. Generate an OAuth2 token using `code/onetime.php` and place the resulting
+   `token.json` file in `code/data/`.
+3. Install dependencies with `composer install --no-dev --ignore-platform-reqs`.
+4. Run the script:
 
 ```bash
 php code/mailfetch.php
