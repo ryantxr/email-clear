@@ -47,8 +47,11 @@ class User extends Authenticatable
         ];
     }
 
-    public function token()
+    /**
+     * Get all OAuth tokens associated with the user.
+     */
+    public function tokens()
     {
-        return $this->hasOne(UserToken::class);
+        return $this->hasMany(UserToken::class);
     }
 }

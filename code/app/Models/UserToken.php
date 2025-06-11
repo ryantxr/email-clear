@@ -11,12 +11,14 @@ class UserToken extends Model
 
     protected $fillable = [
         'user_id',
-        'refresh_token',
-        'last_scanned_at',
+        'email',
+        'token',
     ];
 
     protected $casts = [
-        'last_scanned_at' => 'datetime',
+        'token' => 'array',
+        'refresh_token',
+        'last_scanned_at',
     ];
 
     public function user()
