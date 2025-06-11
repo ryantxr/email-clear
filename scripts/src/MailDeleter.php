@@ -73,7 +73,7 @@ class MailDeleter
             foreach ( $stack as $i => $trace ) {
                 if ( ! empty($msg1) ) $msg1 .= "\n";
                 $function = sprintf('%s%s', ( ! empty($trace['class']) ? $trace['class'] . '::' : null), $trace['function']);
-                $msg1 .= sprintf("%d %s %s:%d", --$n, $function, $trace['file']::null, $trace['line']::null);
+                $msg1 .= sprintf("%d %s %s:%d", --$n, $function, $trace['file'] ?? '', $trace['line'] ?? 0);
             }
             if ( ! empty($msg1) )$msg .= "\n" . $msg1;
             $this->out($msg);
@@ -86,7 +86,7 @@ class MailDeleter
             foreach ( $stack as $i => $trace ) {
                 if ( ! empty($msg1) ) $msg1 .= "\n";
                 $function = sprintf('%s%s', ( ! empty($trace['class']) ? $trace['class'] . '::' : null), $trace['function']);
-                $msg1 .= sprintf("%d %s %s:%d", --$n, $function, $trace['file']::null, $trace['line']::null);
+                $msg1 .= sprintf("%d %s %s:%d", --$n, $function, $trace['file'] ?? '', $trace['line'] ?? 0);
             }
             if ( ! empty($msg1) )$msg .= "\n" . $msg1;
             $this->out($msg);
