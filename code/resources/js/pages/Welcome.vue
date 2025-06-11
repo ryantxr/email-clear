@@ -34,19 +34,46 @@ import { Head, Link } from '@inertiajs/vue3';
             </nav>
         </header>
         <div class="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
-            <main class="flex w-full max-w-[335px] flex-col-reverse overflow-hidden rounded-lg lg:max-w-4xl lg:flex-row">
-                <div
-                    class="flex-1 rounded-br-lg rounded-bl-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"
+            <main class="flex w-full max-w-[335px] flex-col gap-8 overflow-hidden rounded-lg lg:max-w-4xl">
+                <section
+                    class="rounded-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"
                 >
-                    <h1 class="mb-1 font-medium">Keep your inbox clear</h1>
+                    <h1 class="mb-1 font-medium">Email overload is real</h1>
                     <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                        Connect your Gmail account and let our tool label solicitation emails automatically.
+                        Unwanted emails clutter your inbox, create distractions and waste time.
                     </p>
                     <p class="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
-                        Email Clear organizes unwanted messages so you can push those annoying emails out of your way.
+                        Email Clear labels solicitation messages so you can keep your inbox tidy.
                     </p>
-                </div>
-                
+                </section>
+
+                <section
+                    class="rounded-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"
+                >
+                    <h2 class="mb-1 font-medium">How it works</h2>
+                    <p class="text-[#706f6c] dark:text-[#A1A09A]">
+                        Connect your Gmail account once and we'll scan for solicitation messages. Every unwanted email is labeled automatically so you can review them when it's convenient.
+                    </p>
+                </section>
+
+                <section
+                    class="rounded-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"
+                >
+                    <h2 class="mb-4 font-medium">Pricing</h2>
+                    <div class="grid gap-4 text-center sm:grid-cols-3">
+                        <div class="rounded-md border p-4">
+                            <h3 class="font-semibold">Free</h3>
+                        </div>
+                        <div class="rounded-md border p-4">
+                            <h3 class="font-semibold">Pro</h3>
+                            <p class="text-sm text-[#706f6c] dark:text-[#A1A09A]">$9 / month</p>
+                        </div>
+                        <div class="rounded-md border p-4">
+                            <h3 class="font-semibold">Super</h3>
+                            <p class="text-sm text-[#706f6c] dark:text-[#A1A09A]">$19 / month</p>
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
         <div class="hidden h-14.5 lg:block"></div>
