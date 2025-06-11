@@ -9,18 +9,18 @@ class MailScanner
 {
     protected $host;
     protected $port;
-    protected $username;
+    protected $email;
     protected $password;
     protected $openaiKey;
     protected $out;
     protected $lastScanFile;
     protected $model;
 
-    public function __construct($host, $port, $username, $password, $openaiKey, $lastScanFile, $model = 'gpt-3.5-turbo', ?\Closure $out = null)
+    public function __construct($host, $port, $email, $password, $openaiKey, $lastScanFile, $model = 'gpt-3.5-turbo', ?\Closure $out = null)
     {
         $this->host = $host;
         $this->port = $port;
-        $this->username = $username;
+        $this->email = $email;
         $this->password = $password;
         $this->openaiKey = $openaiKey;
         $this->lastScanFile = $lastScanFile;
@@ -89,7 +89,7 @@ class MailScanner
             'port'          => $this->port,
             'encryption'    => 'ssl',
             'validate_cert' => true,
-            'username'      => $this->username,
+            'username'      => $this->email,
             'password'      => $this->password,
             'protocol'      => 'imap'
         ]);

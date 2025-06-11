@@ -10,7 +10,7 @@ $port = '993';
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
-$username = $_ENV['USERNAME'] ?? null;
+$email = $_ENV['USERNAME'] ?? null;
 
 // Path to OAuth2 credentials and saved token
 $clientSecret = __DIR__ . '/data/client_secret.json';
@@ -57,7 +57,7 @@ if (time() >= $expiry && isset($token['refresh_token'])) {
 
 // Extract the access token for IMAP authentication
 $accessToken = $token['access_token'] ?? null;
-$authString = base64_encode("user=$username\1auth=Bearer $accessToken\1\1");
+$authString = base64_encode("user=$email\1auth=Bearer $accessToken\1\1");
 // IMAP server connection string
 $imapHost = '{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX';
 
@@ -69,10 +69,10 @@ $options2 = [
     'DISABLE_AUTHENTICATOR' => ['PLAIN', 'LOGIN'], // only XOAUTH2
     'AUTHENTICATOR' => 'XOAUTH2'
 ];
-$connection = imap_open($imapHost, $username, $authString, 0, 1, $options2);
+$connection = imap_open($imapHost, $email, $authString, 0, 1, $options2);
 // $imap = imap_open(
 //     $imapHost,
-//     $username,
+//     $email,
 //     $authString,
 //     OP_READONLY, // or 0 for read-write
 //     1,

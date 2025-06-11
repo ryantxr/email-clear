@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\GmailController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -18,4 +19,9 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/Appearance');
     })->name('appearance');
+
+    Route::get('settings/gmail', [GmailController::class, 'edit'])->name('gmail.edit');
+    Route::post('settings/gmail/connect', [GmailController::class, 'redirect'])->name('gmail.connect');
+    Route::get('settings/gmail/callback', [GmailController::class, 'callback'])->name('gmail.callback');
+    Route::delete('settings/gmail/{token}', [GmailController::class, 'destroy'])->name('gmail.destroy');
 });
