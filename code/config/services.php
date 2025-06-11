@@ -37,7 +37,6 @@ return [
 
     'google' => [
         'credentials' => base_path(env('GOOGLE_CREDENTIALS_PATH', 'client_secret.json')),
-        'username' => env('GOOGLE_USERNAME'),
     ],
 
     'openai' => [
