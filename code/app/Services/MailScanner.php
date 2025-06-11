@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\UserToken;
+use App\Lib\OpenAiModels;
 use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
 use Webklex\PHPIMAP\ClientManager;
@@ -24,7 +25,7 @@ class MailScanner
     /**
      * Scan the inbox for solicitation emails.
      */
-    public function scan(UserToken $token, string $username, string $openaiKey, string $model = 'gpt-3.5-turbo'): void
+    public function scan(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
     {
         $accessToken = $this->refreshAccessToken($token);
 
