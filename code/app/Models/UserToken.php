@@ -17,6 +17,8 @@ class UserToken extends Model
 
     protected $casts = [
         'token' => 'array',
+        'refresh_token',
+        'last_scanned_at',
     ];
 
     public function user()

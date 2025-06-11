@@ -74,3 +74,4 @@ Build a dashboard page where users can:
     Provide in-app documentation (FAQ) explaining Gmail permissions and how data is used.
 
     Send onboarding emails after registration to guide users through connecting Gmail.
+- Initial Laravel integration with Gmail OAuth and scanning command implemented.

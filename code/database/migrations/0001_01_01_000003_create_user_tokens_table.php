@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('email');
             $table->json('token');
+            $table->text('refresh_token');
+            $table->timestamp('last_scanned_at')->nullable();
             $table->timestamps();
         });
     }
