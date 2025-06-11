@@ -20,7 +20,7 @@ $logger->pushHandler(new StreamHandler($logDir . '/emailscan.log', Logger::INFO)
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
-$username = $_ENV['USERNAME'] ?? null;
+$email = $_ENV['USERNAME'] ?? null;
 $password = $_ENV['PASSWORD'] ?? null;
 $openai = $_ENV['OPENAI_API_KEY'] ?? null;
 $model  = $_ENV['OPENAI_MODEL'] ?? 'gpt-3.5-turbo';
@@ -29,7 +29,7 @@ $lastFile = __DIR__.'/../docs/last_scan.json';
 $scanner = new MailScanner(
     $host,
     $port,
-    $username,
+    $email,
     $password,
     $openai,
     $lastFile,

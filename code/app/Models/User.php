@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\UserToken;
 
 class User extends Authenticatable
 {
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'plan',
     ];
 
     /**
@@ -44,5 +46,34 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function gmailTokens()
+    {
+        return $this->hasMany(GmailToken::class);
+    }
+
+    public function plan(): string
+    {
+        return $this->plan ?? 'free';
+    }
+
+    public function planLimits(): array
+    {
+        $plans = config('plans');
+        return $plans[$this->plan()] ?? $plans['free'] ?? [];
+    }
+
+    public function planLimit(string $key, $default = null)
+    {
+        return $this->planLimits()[$key] ?? $default;
+    }
+
+    /**
+     * Get all OAuth tokens associated with the user.
+     */
+    public function tokens()
+    {
+        return $this->hasMany(UserToken::class);
     }
 }

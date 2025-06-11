@@ -6,27 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('user_tokens', function (Blueprint $table) {
+        Schema::create('gmail_tokens', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('email');
             $table->json('token');
-            $table->text('refresh_token');
-            $table->timestamp('last_scanned_at')->nullable();
+            $table->unsignedInteger('daily_count')->default(0);
+            $table->date('daily_count_date')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('user_tokens');
+        Schema::dropIfExists('gmail_tokens');
     }
 };

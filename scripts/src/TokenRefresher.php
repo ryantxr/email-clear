@@ -1,6 +1,10 @@
 <?php
 namespace App;
-
+/*
+ * This file is a proof of concept only.
+ * Use as a reference only.
+ * Do not modify
+ */
 use GuzzleHttp\Client as HttpClient;
 use RuntimeException;
 

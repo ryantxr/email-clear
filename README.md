@@ -41,3 +41,7 @@ php code/webklex_fetch.php
 
 If the connection is successful, the subject of the fetched message will be
 displayed.
+
+## Laravel integration
+
+The application under `code/` now provides a simple Gmail connection flow. After registering and verifying your account, visit `/settings/gmail` to connect your mailbox. A console command `php artisan gmail:scan` will read recent messages and update the `user_tokens` table with the last scanned time.

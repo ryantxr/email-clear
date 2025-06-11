@@ -9,6 +9,7 @@ class UserToken extends Model
 {
     use HasFactory;
 
+
     /**
      * The attributes that are mass assignable.
      *
@@ -17,6 +18,7 @@ class UserToken extends Model
     protected $fillable = [
         'user_id',
         'refresh_token',
+        'email',
         'last_scanned_at',
     ];
 
