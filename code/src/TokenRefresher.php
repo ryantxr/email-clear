@@ -17,6 +17,28 @@ class TokenRefresher
         $this->httpClient = $httpClient ?: new HttpClient();
     }
 
+    public function needsRefresh(): bool
+    {
+        if (!file_exists($this->tokenPath)) {
+            throw new RuntimeException('Token file not found.');
+        }
+    
+        $token = json_decode(file_get_contents($this->tokenPath), true);
+        if (!is_array($token)) {
+            throw new RuntimeException('Invalid token file.');
+        }
+        $expiry = ($token['created'] ?? 0) + ($token['expires_in'] ?? 0) - 60;
+        if (time() < $expiry || !isset($token['refresh_token'])) {
+            return false;
+        }
+    
+        if (!file_exists($this->clientSecretPath)) {
+            throw new RuntimeException('Client secret file not found.');
+        }
+
+        return true;
+    }
+
     /**
      * Refresh the access token if it has expired.
      *
@@ -47,14 +69,17 @@ class TokenRefresher
         if (!is_array($secret)) {
             throw new RuntimeException('Invalid client secret file.');
         }
-
+        
         $cfg = $secret['installed'] ?? $secret['web'] ?? [];
         $tokenUri = $cfg['token_uri'] ?? 'https://oauth2.googleapis.com/token';
-
+        
+        if ( empty($cfg['client_id']) || empty($cfg['client_secret']) ) {
+            throw new RuntimeException('client_id or client_secret is missing or empty.');
+        }
         $response = $this->httpClient->post($tokenUri, [
             'form_params' => [
-                'client_id'     => $cfg['client_id'] ?? '',
-                'client_secret' => $cfg['client_secret'] ?? '',
+                'client_id'     => $cfg['client_id'],
+                'client_secret' => $cfg['client_secret'],
                 'refresh_token' => $token['refresh_token'],
                 'grant_type'    => 'refresh_token',
             ],
