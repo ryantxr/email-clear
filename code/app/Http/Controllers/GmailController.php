@@ -46,10 +46,9 @@ class GmailController extends Controller
             'created'       => time(),
         ];
 
-        UserToken::create([
-            'user_id' => Auth::id(),
-            'email'   => $googleUser->email,
-            'token'   => $token,
+        Auth::user()->tokens()->create([
+            'email' => $googleUser->email,
+            'token' => $token,
         ]);
 
         return redirect()->route('gmail.edit');
