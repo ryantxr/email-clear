@@ -15,10 +15,12 @@ try {
     $refresher = new TokenRefresher($clientSecret, $tokenPath);
     if ( $refresher->needsRefresh() ) {
         echo 'Token expired. Refreshing.' . PHP_EOL;
-        $after = $refresher->refresh();
+        $token = $refresher->refresh();
     } else {
+        $token = $refresher->accessToken();
         echo 'Token is good.' . PHP_EOL;
     }
+    // $token['access_token']
 } catch (\Throwable $e) {
     echo $e->getMessage() . PHP_EOL;
     exit(1);
