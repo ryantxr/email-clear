@@ -2,7 +2,7 @@
 require 'vendor/autoload.php';
 
 use Dotenv\Dotenv;
-use GuzzleHttp\Client as HttpClient;
+use App\TokenRefresher;
 
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
@@ -11,41 +11,24 @@ $dotenv->safeLoad();
 $clientSecret = __DIR__ . '/data/client_secret.json';
 $tokenPath    = __DIR__ . '/data/token.json';
 
-if (!file_exists($tokenPath)) {
-    echo "Token file not found." . PHP_EOL;
-    exit(1);
-}
-
-$token = json_decode(file_get_contents($tokenPath), true);
-
-if (!$token) {
-    echo "Invalid token file." . PHP_EOL;
-    exit(1);
-}
-
-// Refresh the token if it is expired and a refresh token is available
-$expiry = ($token['created'] ?? 0) + ($token['expires_in'] ?? 0) - 60;
-if (time() >= $expiry && isset($token['refresh_token'])) {
-    echo "Token expired. Refreshing." . PHP_EOL;
-    $secret = json_decode(file_get_contents($clientSecret), true);
-    $cfg = $secret['installed'] ?? $secret['web'] ?? [];
-    $tokenUri = $cfg['token_uri'] ?? 'https://oauth2.googleapis.com/token';
-
-    $http = new HttpClient();
-    $response = $http->post($tokenUri, [
-        'form_params' => [
-            'client_id'     => $cfg['client_id'] ?? '',
-            'client_secret' => $cfg['client_secret'] ?? '',
-            'refresh_token' => $token['refresh_token'],
-            'grant_type'    => 'refresh_token',
-        ],
-    ]);
-
-    $new = json_decode($response->getBody(), true);
-    if (isset($new['access_token'])) {
-        $token['access_token'] = $new['access_token'];
-        $token['expires_in']   = $new['expires_in'] ?? 3600;
-        $token['created']      = time();
-        file_put_contents($tokenPath, json_encode($token));
+try {
+    $before = null;
+    if (file_exists($tokenPath)) {
+        $before = json_decode(file_get_contents($tokenPath), true);
+        if (!is_array($before)) {
+            throw new RuntimeException('Invalid token file.');
+        }
+    } else {
+        throw new RuntimeException('Token file not found.');
     }
+
+    $refresher = new TokenRefresher($clientSecret, $tokenPath);
+    $after = $refresher->refresh();
+
+    if (($before['created'] ?? 0) !== ($after['created'] ?? 0)) {
+        echo 'Token expired. Refreshing.' . PHP_EOL;
+    }
+} catch (\Throwable $e) {
+    echo $e->getMessage() . PHP_EOL;
+    exit(1);
 }
