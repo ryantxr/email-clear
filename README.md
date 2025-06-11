@@ -23,7 +23,10 @@ usage:
 
 ## Fetching a single email
 
-The `code/mailfetch.php` script can be used to verify that the application is able to connect to your mailbox using IMAP. It reads an OAuth2 access token from `code/data/token.json` and refreshes it when needed.
+The `code/webklex_fetch.php` script demonstrates how to retrieve the most
+recent message using the `webklex/php-imap` library. It relies on
+`App\TokenRefresher` to refresh the OAuth token only when necessary so that
+Google login attempts are kept to a minimum.
 
 1. Copy `code/.env.example` to `code/.env` and set the `USERNAME` variable to
    your Gmail address.
@@ -33,7 +36,8 @@ The `code/mailfetch.php` script can be used to verify that the application is ab
 4. Run the script:
 
 ```bash
-php code/mailfetch.php
+php code/webklex_fetch.php
 ```
 
-If the connection is successful, the subject of the fetched message will be displayed.
+If the connection is successful, the subject of the fetched message will be
+displayed.
