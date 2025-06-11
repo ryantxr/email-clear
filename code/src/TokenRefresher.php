@@ -9,6 +9,7 @@ class TokenRefresher
     protected string $clientSecretPath;
     protected string $tokenPath;
     protected HttpClient $httpClient;
+    protected $token;
 
     public function __construct(string $clientSecretPath, string $tokenPath, ?HttpClient $httpClient = null)
     {
@@ -23,12 +24,13 @@ class TokenRefresher
             throw new RuntimeException('Token file not found.');
         }
     
-        $token = json_decode(file_get_contents($this->tokenPath), true);
-        if (!is_array($token)) {
+        $this->token = json_decode(file_get_contents($this->tokenPath), true);
+        if (!is_array($this->token)) {
             throw new RuntimeException('Invalid token file.');
         }
-        $expiry = ($token['created'] ?? 0) + ($token['expires_in'] ?? 0) - 60;
-        if (time() < $expiry || !isset($token['refresh_token'])) {
+        $expiry = ($this->token['created'] ?? 0) + ($this->token['expires_in'] ?? 0) - 60;
+        // Token is not expired
+        if (time() < $expiry || !isset($this->token['refresh_token'])) {
             return false;
         }
     
@@ -37,6 +39,11 @@ class TokenRefresher
         }
 
         return true;
+    }
+
+    public function accessToken(): array
+    {
+        return $this->token;
     }
 
     /**
@@ -51,14 +58,14 @@ class TokenRefresher
             throw new RuntimeException('Token file not found.');
         }
 
-        $token = json_decode(file_get_contents($this->tokenPath), true);
-        if (!is_array($token)) {
+        $this->token = json_decode(file_get_contents($this->tokenPath), true);
+        if (!is_array($this->token)) {
             throw new RuntimeException('Invalid token file.');
         }
 
-        $expiry = ($token['created'] ?? 0) + ($token['expires_in'] ?? 0) - 60;
-        if (time() < $expiry || !isset($token['refresh_token'])) {
-            return $token;
+        $expiry = ($this->token['created'] ?? 0) + ($this->token['expires_in'] ?? 0) - 60;
+        if (time() < $expiry || !isset($this->token['refresh_token'])) {
+            return $this->token;
         }
 
         if (!file_exists($this->clientSecretPath)) {
@@ -80,7 +87,7 @@ class TokenRefresher
             'form_params' => [
                 'client_id'     => $cfg['client_id'],
                 'client_secret' => $cfg['client_secret'],
-                'refresh_token' => $token['refresh_token'],
+                'refresh_token' => $this->token['refresh_token'],
                 'grant_type'    => 'refresh_token',
             ],
         ]);
@@ -90,11 +97,11 @@ class TokenRefresher
             throw new RuntimeException('Failed to refresh token.');
         }
 
-        $token['access_token'] = $new['access_token'];
-        $token['expires_in']   = $new['expires_in'] ?? 3600;
-        $token['created']      = time();
-        file_put_contents($this->tokenPath, json_encode($token));
+        $this->token['access_token'] = $new['access_token'];
+        $this->token['expires_in']   = $new['expires_in'] ?? 3600;
+        $this->token['created']      = time();
+        file_put_contents($this->tokenPath, json_encode($this->token));
 
-        return $token;
+        return $this->token;
     }
 }
