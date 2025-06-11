@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+
+interface Props {
+    frontPageText: string | null;
+    pricing: string | null;
+}
+
+const props = defineProps<Props>();
 </script>
 
 <template>
@@ -39,12 +46,11 @@ import { Head, Link } from '@inertiajs/vue3';
                     class="rounded-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"
                 >
                     <h1 class="mb-1 font-medium">Email overload is real</h1>
-                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                        Unwanted emails clutter your inbox, create distractions and waste time.
-                    </p>
-                    <p class="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
-                        Email Clear labels solicitation messages so you can keep your inbox tidy.
-                    </p>
+                    <p
+                        v-if="props.frontPageText"
+                        class="mb-4 text-[#706f6c] dark:text-[#A1A09A]"
+                        v-html="props.frontPageText"
+                    ></p>
                 </section>
 
                 <section
@@ -60,19 +66,7 @@ import { Head, Link } from '@inertiajs/vue3';
                     class="rounded-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"
                 >
                     <h2 class="mb-4 font-medium">Pricing</h2>
-                    <div class="grid gap-4 text-center sm:grid-cols-3">
-                        <div class="rounded-md border p-4">
-                            <h3 class="font-semibold">Free</h3>
-                        </div>
-                        <div class="rounded-md border p-4">
-                            <h3 class="font-semibold">Pro</h3>
-                            <p class="text-sm text-[#706f6c] dark:text-[#A1A09A]">$9 / month</p>
-                        </div>
-                        <div class="rounded-md border p-4">
-                            <h3 class="font-semibold">Super</h3>
-                            <p class="text-sm text-[#706f6c] dark:text-[#A1A09A]">$19 / month</p>
-                        </div>
-                    </div>
+                    <div v-if="props.pricing" v-html="props.pricing"></div>
                 </section>
             </main>
         </div>
