@@ -46,7 +46,7 @@ class GmailController extends Controller
             'refresh_token' => $token['refresh_token'] ?? ($token['access_token'] ?? ''),
         ]);
 
-        return to_route('settings.gmail.edit');
+        return to_route('gmail.edit');
     }
 
     /**
