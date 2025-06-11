@@ -2,11 +2,11 @@
 
 This repository provides a few simple utilities for connecting to an IMAP inbox.
 
-## Refreshing the token
+## Token refresher
 
-App\TokenRefresh
+`App\TokenRefresher` checks whether your OAuth access token has expired and
+refreshes it when necessary.
 
-This class refreshed the access token if needed.
 
 usage:
 ```php
