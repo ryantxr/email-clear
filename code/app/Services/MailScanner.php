@@ -43,7 +43,7 @@ class MailScanner
             if (!$mostRecent || $date->gt($mostRecent)) {
                 $mostRecent = $date;
             }
-
+            // TODO: implement throttling and message limits.
             $body = $message->getTextBody() ?: $message->getHTMLBody();
             $analysis = $this->classify($body, $openaiKey, $model);
             // TODO: add Gmail labeling via API
