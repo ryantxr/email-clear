@@ -18,6 +18,10 @@ const sidebarNavItems: NavItem[] = [
         title: 'Appearance',
         href: '/settings/appearance',
     },
+    {
+        title: 'Gmail',
+        href: '/settings/gmail',
+    },
 ];
 
 const page = usePage();
