@@ -5,6 +5,7 @@ use Webklex\PHPIMAP\ClientManager;
 use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
 
+
 class MailScanner
 {
     protected $host;
@@ -49,6 +50,23 @@ class MailScanner
         }
     }
 
+    protected function incrementDailyCount(): void
+    {
+        if (!$this->tokenModel) {
+            return;
+        }
+        $today = Carbon::today();
+        if ($this->tokenModel->daily_count_date && !$this->tokenModel->daily_count_date->isSameDay($today)) {
+            $this->tokenModel->daily_count = 0;
+            $this->tokenModel->daily_count_date = $today;
+        }
+        if (!$this->tokenModel->daily_count_date) {
+            $this->tokenModel->daily_count_date = $today;
+        }
+        $this->tokenModel->daily_count++;
+        $this->tokenModel->save();
+    }
+
     protected function classify($body)
     {
         $prompt = "Given the following email, rate it 0 or 1 for each criterion:\n".
@@ -83,6 +101,13 @@ class MailScanner
 
     public function scan()
     {
+        if ($this->tokenModel && $this->tokenModel->daily_count_date &&
+            $this->tokenModel->daily_count_date->isSameDay(Carbon::today()) &&
+            $this->tokenModel->daily_count >= $this->dailyLimit) {
+            $this->out('Daily limit reached');
+            return;
+        }
+
         $lastScan = $this->loadLastScan();
         $client = (new ClientManager())->make([
             'host'          => $this->host,
@@ -112,6 +137,10 @@ class MailScanner
             $body = $message->getTextBody() ?: $message->getHTMLBody();
             $analysis = $this->classify($body);
             $this->out($analysis);
+            $this->incrementDailyCount();
+            if ($this->tokenModel && $this->tokenModel->daily_count >= $this->dailyLimit) {
+                break;
+            }
         }
         if ($mostRecent) {
             $this->saveLastScan($mostRecent);

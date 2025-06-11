@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'plan',
     ];
 
     /**
@@ -45,6 +46,27 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function gmailTokens()
+    {
+        return $this->hasMany(GmailToken::class);
+    }
+
+    public function plan(): string
+    {
+        return $this->plan ?? 'free';
+    }
+
+    public function planLimits(): array
+    {
+        $plans = config('plans');
+        return $plans[$this->plan()] ?? $plans['free'] ?? [];
+    }
+
+    public function planLimit(string $key, $default = null)
+    {
+        return $this->planLimits()[$key] ?? $default;
     }
 
     /**
