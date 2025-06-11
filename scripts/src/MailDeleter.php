@@ -1,5 +1,10 @@
 <?php
 namespace App;
+/*
+ * This file is a proof of concept only.
+ * Use as a reference only.
+ * Do not modify
+ */
 use Webklex\PHPIMAP\Client as MailClient;
 use Webklex\PHPIMAP\Support\Masks\Message; // Add this import for masks
 use Webklex\PHPIMAP\ClientManager; // Correct class for instantiating clients
