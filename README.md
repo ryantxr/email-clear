@@ -23,20 +23,20 @@ usage:
 
 ## Fetching a single email
 
-The `code/webklex_fetch.php` script demonstrates how to retrieve the most
+The `scripts/webklex_fetch.php` script demonstrates how to retrieve the most
 recent message using the `webklex/php-imap` library. It relies on
 `App\TokenRefresher` to refresh the OAuth token only when necessary so that
 Google login attempts are kept to a minimum.
 
 1. Copy `code/.env.example` to `code/.env` and set the `USERNAME` variable to
    your Gmail address.
-2. Generate an OAuth2 token using `code/onetime.php` and place the resulting
-   `token.json` file in `code/data/`.
+2. Generate an OAuth2 token using `scripts/onetime.php` and place the resulting
+   `token.json` file in `scripts/data/`.
 3. Install dependencies with `composer install --no-dev --ignore-platform-reqs`.
 4. Run the script:
 
 ```bash
-php code/webklex_fetch.php
+php scripts/webklex_fetch.php
 ```
 
 If the connection is successful, the subject of the fetched message will be
