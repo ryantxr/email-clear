@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\UserToken;
 
 class User extends Authenticatable
 {
@@ -66,5 +67,13 @@ class User extends Authenticatable
     public function planLimit(string $key, $default = null)
     {
         return $this->planLimits()[$key] ?? $default;
+    }
+
+    /**
+     * Get all OAuth tokens associated with the user.
+     */
+    public function tokens()
+    {
+        return $this->hasMany(UserToken::class);
     }
 }

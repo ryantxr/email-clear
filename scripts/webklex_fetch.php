@@ -11,7 +11,7 @@ $port = 993;
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
-$username = $_ENV['USERNAME'] ?? null;
+$email = $_ENV['USERNAME'] ?? null;
 
 $clientSecret = __DIR__.'/data/client_secret.json';
 $tokenPath    = __DIR__.'/data/token.json';
@@ -41,7 +41,7 @@ $client = $cm->make([
     'encryption'     => 'ssl',
     'validate_cert'  => true,
     'protocol'       => 'imap',
-    'username'       => $username,
+    'username'       => $email,
     'password'       => $accessToken,
     'authentication' => 'oauth',
 ]);

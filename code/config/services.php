@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'google' => [
+        'credentials' => base_path(env('GOOGLE_CREDENTIALS_PATH', 'client_secret.json')),
+        'username' => env('GOOGLE_USERNAME'),
+    ],
+
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-3.5-turbo'),
+    ],
+
 ];
