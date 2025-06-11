@@ -48,10 +48,6 @@ class User extends Authenticatable
         ];
     }
 
-    public function gmailTokens()
-    {
-        return $this->hasMany(GmailToken::class);
-    }
 
     public function plan(): string
     {
