@@ -9,9 +9,16 @@ use Webklex\PHPIMAP\ClientManager;
 
 class MailScanner
 {
+    protected int $maxMessages;
+    protected int $throttleMs;
+
     public function __construct(
-        protected HttpClient $httpClient = new HttpClient()
+        protected HttpClient $httpClient = new HttpClient(),
+        ?int $maxMessages = null,
+        ?int $throttleMs = null,
     ) {
+        $this->maxMessages = $maxMessages ?? (int) config('scanner.max_messages');
+        $this->throttleMs = $throttleMs ?? (int) config('scanner.throttle_ms');
     }
 
     /**
@@ -35,17 +42,25 @@ class MailScanner
         $inbox = $client->getFolder('INBOX');
 
         $query = $inbox->messages()->since($token->last_scanned_at ?: Carbon::now()->subDays(2));
+        if (method_exists($query, 'limit')) {
+            $query->limit($this->maxMessages);
+        }
         $messages = $query->get();
 
         $mostRecent = $token->last_scanned_at;
+        $count = 0;
         foreach ($messages as $message) {
+            if ($count >= $this->maxMessages) {
+                break;
+            }
             $date = $message->getDate();
             if (!$mostRecent || $date->gt($mostRecent)) {
                 $mostRecent = $date;
             }
-            // TODO: implement throttling and message limits.
             $body = $message->getTextBody() ?: $message->getHTMLBody();
             $analysis = $this->classify($body, $openaiKey, $model);
+            usleep($this->throttleMs * 1000);
+            $count++;
             // TODO: add Gmail labeling via API
         }
 
