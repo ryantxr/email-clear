@@ -32,6 +32,6 @@ class SiteContentController extends Controller
             Setting::updateOrCreate(['key' => $key], ['value' => $value]);
         }
 
-        return back();
+        return back(303);
     }
 }
