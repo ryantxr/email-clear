@@ -14,8 +14,8 @@ class SiteContentController extends Controller
     public function edit(): Response
     {
         return Inertia::render('admin/SiteContent', [
-            'frontPageText' => Setting::value('front_page_text'),
-            'pricing' => Setting::value('pricing'),
+            'frontPageText' => Setting::where('key', 'front_page_text')->value('value'),
+            'pricing' => Setting::where('key', 'pricing')->value('value'),
         ]);
     }
 
