@@ -37,7 +37,7 @@ class GmailController extends Controller
             'token' => $token,
         ]);
 
-        return redirect()->route('gmail.edit');
+        return redirect()->route('gmail.edit', status: 303);
     }
 
     public function edit(): Response
@@ -53,6 +53,6 @@ class GmailController extends Controller
     {
         $token->delete();
 
-        return back();
+        return back(303);
     }
 }
