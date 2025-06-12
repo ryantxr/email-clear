@@ -43,7 +43,18 @@ const submit = () => {
                     <label for="pricing">Pricing</label>
                     <textarea id="pricing" class="w-full border" rows="3" v-model="form.pricing" />
                 </div>
-                <Button type="submit">Save</Button>
+                <div class="flex items-center gap-4">
+                    <Button type="submit" :disabled="form.processing">Save</Button>
+
+                    <Transition
+                        enter-active-class="transition ease-in-out"
+                        enter-from-class="opacity-0"
+                        leave-active-class="transition ease-in-out"
+                        leave-to-class="opacity-0"
+                    >
+                        <p v-show="form.recentlySuccessful" class="text-sm text-neutral-600">Saved.</p>
+                    </Transition>
+                </div>
             </form>
         </div>
     </AppLayout>
