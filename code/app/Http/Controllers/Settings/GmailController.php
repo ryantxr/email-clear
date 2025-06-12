@@ -46,7 +46,7 @@ class GmailController extends Controller
             'refresh_token' => $token['refresh_token'] ?? ($token['access_token'] ?? ''),
         ]);
 
-        return to_route('gmail.edit');
+        return to_route('gmail.edit', [], 303);
     }
 
     /**
@@ -58,7 +58,7 @@ class GmailController extends Controller
         if ($token) {
             $token->delete();
         }
-        return back();
+        return back(303);
     }
 
     protected function makeClient(): Google_Client
