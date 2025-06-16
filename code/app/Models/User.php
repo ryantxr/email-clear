@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'plan',
+        'is_admin',
     ];
 
     /**
@@ -45,13 +46,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
     }
 
-    public function gmailTokens()
-    {
-        return $this->hasMany(GmailToken::class);
-    }
 
     public function plan(): string
     {
@@ -75,5 +73,18 @@ class User extends Authenticatable
     public function tokens()
     {
         return $this->hasMany(UserToken::class);
+    }
+
+    /**
+     * IMAP accounts associated with the user.
+     */
+    public function imapAccounts()
+    {
+        return $this->hasMany(ImapAccount::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
     }
 }

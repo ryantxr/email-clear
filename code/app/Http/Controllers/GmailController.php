@@ -20,20 +20,6 @@ class GmailController extends Controller
             ->redirect();
     }
 
-    public function callback2(Request $request)
-    {
-        $user = $request->user();
-
-        if ($user->gmailTokens()->count() >= $user->planLimit('max_tokens', PHP_INT_MAX)) {
-            return redirect()->route('dashboard')->withErrors('Maximum number of Gmail connections reached.');
-        }
-
-        // Handle OAuth callback and persist token
-        // $tokenData = ...
-        // GmailToken::create(['user_id' => $user->id, 'token' => $tokenData]);
-
-        return redirect()->route('dashboard');
-    }
     public function callback(Request $request)
     {
         $googleUser = Socialite::driver('google')->user();
@@ -51,7 +37,7 @@ class GmailController extends Controller
             'token' => $token,
         ]);
 
-        return redirect()->route('gmail.edit');
+        return redirect()->route('gmail.edit', status: 303);
     }
 
     public function edit(): Response
@@ -67,6 +53,6 @@ class GmailController extends Controller
     {
         $token->delete();
 
-        return back();
+        return back(303);
     }
 }

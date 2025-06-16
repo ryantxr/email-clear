@@ -30,6 +30,11 @@ defineProps<Props>();
                 Settings
             </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem v-if="user.is_admin" :as-child="true">
+            <Link class="block w-full" :href="route('admin.content.edit')" prefetch as="button">
+                Admin
+            </Link>
+        </DropdownMenuItem>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
     <DropdownMenuItem :as-child="true">

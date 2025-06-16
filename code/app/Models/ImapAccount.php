@@ -5,20 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class GmailToken extends Model
+class ImapAccount extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'token',
-        'daily_count',
-        'daily_count_date',
+        'email',
+        'host',
+        'port',
+        'encryption',
+        'username',
+        'password',
     ];
 
     protected $casts = [
-        'token' => 'array',
-        'daily_count_date' => 'date',
+        'password' => 'encrypted',
     ];
 
     public function user()

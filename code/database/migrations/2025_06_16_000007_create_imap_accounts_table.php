@@ -8,18 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('gmail_tokens', function (Blueprint $table) {
+        Schema::create('imap_accounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->json('token');
-            $table->unsignedInteger('daily_count')->default(0);
-            $table->date('daily_count_date')->nullable();
+            $table->string('email');
+            $table->string('host');
+            $table->unsignedSmallInteger('port');
+            $table->string('encryption')->nullable();
+            $table->string('username');
+            $table->text('password');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('gmail_tokens');
+        Schema::dropIfExists('imap_accounts');
     }
 };
