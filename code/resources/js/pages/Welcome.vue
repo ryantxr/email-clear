@@ -42,6 +42,12 @@ const props = defineProps<Props>();
         </header>
         <div class="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
             <main class="flex w-full max-w-[335px] flex-col gap-8 overflow-hidden rounded-lg lg:max-w-4xl">
+
+                <section
+                    class=" bg-white p-6 pb-12 leading-[20px] lg:p-20  dark:text-[#7619ff] dark:bg-transparent"
+                >
+                <h1 class="text-2xl font-bold">Keep solicitation emails to a minimum</h1>
+                </section>
                 <section
                     class="rounded-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"
                 >
