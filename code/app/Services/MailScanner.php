@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\UserToken;
+use App\Models\ImapAccount;
 use App\Lib\OpenAiModels;
 use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
@@ -23,9 +24,9 @@ class MailScanner
     }
 
     /**
-     * Scan the inbox for solicitation emails.
+     * Scan a Gmail inbox for solicitation emails.
      */
-    public function scan(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
+    public function scanGmailAccount(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
     {
         $accessToken = $this->refreshAccessToken($token);
 
@@ -68,6 +69,36 @@ class MailScanner
         if ($mostRecent) {
             $token->last_scanned_at = $mostRecent;
             $token->save();
+        }
+    }
+
+    /**
+     * Scan a standard IMAP account.
+     */
+    public function scanImapAccount(ImapAccount $account, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
+    {
+        $client = (new ClientManager())->make([
+            'host'          => $account->host,
+            'port'          => $account->port,
+            'encryption'    => $account->encryption,
+            'validate_cert' => true,
+            'username'      => $account->username,
+            'password'      => $account->password,
+        ]);
+
+        $client->connect();
+        $inbox = $client->getFolder('INBOX');
+
+        $query = $inbox->messages()->since(Carbon::now()->subDays(2));
+        if (method_exists($query, 'limit')) {
+            $query->limit($this->maxMessages);
+        }
+        $messages = $query->get();
+
+        foreach ($messages as $message) {
+            $body = $message->getTextBody() ?: $message->getHTMLBody();
+            $this->classify($body, $openaiKey, $model);
+            usleep($this->throttleMs * 1000);
         }
     }
 

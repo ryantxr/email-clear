@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\UserToken;
+use App\Models\ImapAccount;
 
 class User extends Authenticatable
 {
@@ -73,6 +74,11 @@ class User extends Authenticatable
     public function tokens()
     {
         return $this->hasMany(UserToken::class);
+    }
+
+    public function imapAccounts()
+    {
+        return $this->hasMany(ImapAccount::class);
     }
 
     public function isAdmin(): bool

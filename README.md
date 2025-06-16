@@ -45,3 +45,9 @@ displayed.
 ## Laravel integration
 
 The application under `code/` now provides a simple Gmail connection flow. After registering and verifying your account, visit `/settings/gmail` to connect your mailbox. A console command `php artisan gmail:scan` will read recent messages and update the `user_tokens` table with the last scanned time.
+
+## Standard IMAP Accounts
+
+In addition to Gmail OAuth, you can connect any standard IMAP inbox. Visit `/settings/imap` to add your server host, port, encryption type, username and password. Credentials are encrypted in the database.
+
+Run `php artisan imap:scan` to process all saved accounts using the same OpenAI powered classifier.
