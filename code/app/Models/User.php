@@ -75,6 +75,14 @@ class User extends Authenticatable
         return $this->hasMany(UserToken::class);
     }
 
+    /**
+     * IMAP accounts associated with the user.
+     */
+    public function imapAccounts()
+    {
+        return $this->hasMany(ImapAccount::class);
+    }
+
     public function isAdmin(): bool
     {
         return (bool) $this->is_admin;
