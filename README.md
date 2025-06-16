@@ -1,6 +1,8 @@
 # Email Clear
 
 This repository provides a few simple utilities for connecting to an IMAP inbox.
+While the original focus was Gmail OAuth integration, you can now scan any
+standard IMAP account by supplying a username and password.
 
 ## Token refresher
 
@@ -45,3 +47,15 @@ displayed.
 ## Laravel integration
 
 The application under `code/` now provides a simple Gmail connection flow. After registering and verifying your account, visit `/settings/gmail` to connect your mailbox. A console command `php artisan gmail:scan` will read recent messages and update the `user_tokens` table with the last scanned time.
+
+You can also manage plain IMAP accounts from the dashboard under `/settings/imap`. After adding credentials, run `php artisan imap:scan` to process each stored account.
+
+### IMAP-only usage
+
+Add account details under `/settings/imap` and then run:
+
+```bash
+php artisan imap:scan
+```
+
+Each stored account will be scanned in turn.

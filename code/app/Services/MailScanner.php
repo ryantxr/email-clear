@@ -71,6 +71,44 @@ class MailScanner
         }
     }
 
+    /**
+     * Scan a plain IMAP account using username and password.
+     */
+    public function scanImap(
+        string $host,
+        int $port,
+        string $encryption,
+        string $username,
+        string $password,
+        string $openaiKey,
+        string $model = OpenAiModels::GPT_41_NANO
+    ): void {
+        $client = (new ClientManager())->make([
+            'host'          => $host,
+            'port'          => $port,
+            'encryption'    => $encryption,
+            'validate_cert' => true,
+            'username'      => $username,
+            'password'      => $password,
+            'protocol'      => 'imap',
+        ]);
+
+        $client->connect();
+        $inbox = $client->getFolder('INBOX');
+
+        $query = $inbox->messages()->since(Carbon::now()->subDays(2));
+        if (method_exists($query, 'limit')) {
+            $query->limit($this->maxMessages);
+        }
+        $messages = $query->get();
+
+        foreach ($messages as $message) {
+            $body = $message->getTextBody() ?: $message->getHTMLBody();
+            $this->classify($body, $openaiKey, $model);
+            usleep($this->throttleMs * 1000);
+        }
+    }
+
     protected function classify(string $body, string $key, string $model): string
     {
         $prompt = "Given the following email, rate it 0 or 1 for each criterion:\n" .
