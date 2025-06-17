@@ -6,6 +6,7 @@ use App\Models\UserToken;
 use App\Lib\OpenAiModels;
 use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
+use Illuminate\Support\Facades\Log;
 use Webklex\PHPIMAP\ClientManager as ImapClient;
 
 class MailScanner
@@ -92,12 +93,14 @@ class MailScanner
             'password'      => $password,
             'protocol'      => 'imap',
         ]);
-        // TODO: Handle situation where login failed.
-        // For now, just log the failure to laravel log
-
-        $client->connect();
+        try {
+            $client->connect();
+        } catch (\Throwable $e) {
+            Log::error('IMAP login failed: ' . $e->getMessage());
+            return;
+        }
         $inbox = $client->getFolder('INBOX');
-        // 
+        //
         $query = $inbox->messages()->since(Carbon::now()->subDays(2));
         if (method_exists($query, 'limit')) {
             $query->limit($this->maxMessages);
@@ -109,7 +112,24 @@ class MailScanner
             // TODO: leave this commented for now
             // We will enable this at a later time
             // $this->classify($body, $openaiKey, $model);
-            // TODO: Log the date, subject to the 'mailreader' channel
+
+            $date = $message->getDate();
+            $subject = $message->getSubject();
+            $fromAttr = $message->getFrom();
+            $from = '';
+            if (is_iterable($fromAttr)) {
+                $parts = [];
+                foreach ($fromAttr as $addr) {
+                    $parts[] = (string) $addr;
+                }
+                $from = implode(', ', $parts);
+            } else {
+                $from = (string) $fromAttr;
+            }
+
+            $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
+            Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject}");
+
             usleep($this->throttleMs * 1000);
         }
     }
