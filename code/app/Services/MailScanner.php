@@ -101,14 +101,14 @@ class MailScanner
             return;
         }
 
-        $this->processFolder($client, 'INBOX', "host: $host, username: $username");
-        $this->processFolder($client, 'Junk', "host: $host, username: $username");
+        $this->processFolder($client, 'INBOX', $openaiKey, $model, "host: $host, username: $username");
+        $this->processFolder($client, 'Junk', $openaiKey, $model, "host: $host, username: $username");
     }
 
     /**
      * 
      */
-    protected function processFolder(ImapClient $client, string $folder, string $label)
+    protected function processFolder(ImapClient $client, string $folder, string $openaiKey, string $model, string $label)
     {
         $inbox = $client->getFolder($folder);
         //
@@ -122,10 +122,6 @@ class MailScanner
         Log::channel('mailread')->info("{$folder} {$label} | {$messageCount} messages.");
         foreach ($messages as $message) {
             $body = $message->getTextBody() ?: $message->getHTMLBody();
-            // TODO: leave this commented for now
-            // We will enable this at a later time
-            // $this->classify($body, $openaiKey, $model);
-
             $date = $message->getDate();
             $subject = $message->getSubject();
             $fromAttr = $message->getFrom();
@@ -139,12 +135,31 @@ class MailScanner
             } else {
                 $from = (string) $fromAttr;
             }
+            // TODO: leave this commented for now
+            // We will enable this at a later time
+            if ( config('services.emailclear.enable_ai') ) {
+                $jsonResponse = $this->classify($body, $openaiKey, $model);
+            } else {
+                $jsonResponse = $this->classifyFake($body, $openaiKey, $model);
+            }
+            Log::channel('mailread')->info("{$jsonResponse}");
 
+            $responseObject = json_decode($jsonResponse);
+            $score = $responseObject->short + $responseObject->pitch + $responseObject->request_call + $responseObject->optout;
             $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
-            Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject}");
+            Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
+            
 
             usleep($this->throttleMs * 1000);
         }
+    }
+
+    /**
+     * This is a stub to test this out to make sure everything is flowing correctly.
+     */
+    protected function classifyFake(string $body, string $key, string $model): string
+    {
+        return '{"short": 1,"pitch":1,"request_call":1, "optout":1}';
     }
 
     protected function classify(string $body, string $key, string $model): string
