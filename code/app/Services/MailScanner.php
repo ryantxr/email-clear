@@ -92,10 +92,12 @@ class MailScanner
             'password'      => $password,
             'protocol'      => 'imap',
         ]);
+        // TODO: Handle situation where login failed.
+        // For now, just log the failure to laravel log
 
         $client->connect();
         $inbox = $client->getFolder('INBOX');
-
+        // 
         $query = $inbox->messages()->since(Carbon::now()->subDays(2));
         if (method_exists($query, 'limit')) {
             $query->limit($this->maxMessages);
@@ -104,7 +106,10 @@ class MailScanner
 
         foreach ($messages as $message) {
             $body = $message->getTextBody() ?: $message->getHTMLBody();
-            $this->classify($body, $openaiKey, $model);
+            // TODO: leave this commented for now
+            // We will enable this at a later time
+            // $this->classify($body, $openaiKey, $model);
+            // TODO: Log the date, subject to the 'mailreader' channel
             usleep($this->throttleMs * 1000);
         }
     }
