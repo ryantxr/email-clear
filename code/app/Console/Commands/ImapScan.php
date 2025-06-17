@@ -5,6 +5,7 @@ use App\Services\MailScanner;
 use App\Models\ImapAccount;
 use Illuminate\Console\Command;
 use App\Lib\OpenAiModels;
+use Illuminate\Support\Facades\Log;
 class ImapScan extends Command
 {
     protected $signature = 'imap:scan';
@@ -17,6 +18,7 @@ class ImapScan extends Command
         $model = config('services.openai.model', OpenAiModels::GPT_41_NANO);
 
         foreach (ImapAccount::all() as $account) {
+            Log::info($account->host);
             $scanner->scanImap(
                 $account->host,
                 $account->port,

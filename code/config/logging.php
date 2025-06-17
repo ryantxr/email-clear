@@ -74,7 +74,7 @@ return [
         ],
 
         'mailread' => [
-            'driver' => 'daily',
+            'driver' => 'single',
             'path' => storage_path('logs/mailread.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 7),

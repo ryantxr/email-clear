@@ -7,7 +7,8 @@ use App\Lib\OpenAiModels;
 use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
 use Illuminate\Support\Facades\Log;
-use Webklex\PHPIMAP\ClientManager as ImapClient;
+use Webklex\PHPIMAP\ClientManager as ImapClientManager;
+use Webklex\PHPIMAP\Client as ImapClient;
 
 class MailScanner
 {
@@ -30,7 +31,7 @@ class MailScanner
     {
         $accessToken = $this->refreshAccessToken($token);
 
-        $client = (new ImapClient())->make([
+        $client = (new ImapClientManager())->make([
             'host'           => 'imap.gmail.com',
             'port'           => 993,
             'encryption'     => 'ssl',
@@ -84,7 +85,7 @@ class MailScanner
         string $openaiKey,
         string $model = OpenAiModels::GPT_41_NANO
     ): void {
-        $client = (new ImapClient())->make([
+        $client = (new ImapClientManager())->make([
             'host'          => $host,
             'port'          => $port,
             'encryption'    => $encryption,
@@ -99,14 +100,26 @@ class MailScanner
             Log::error('IMAP login failed: ' . $e->getMessage());
             return;
         }
-        $inbox = $client->getFolder('INBOX');
+
+        $this->processFolder($client, 'INBOX', "host: $host, username: $username");
+        $this->processFolder($client, 'Junk', "host: $host, username: $username");
+    }
+
+    /**
+     * 
+     */
+    protected function processFolder(ImapClient $client, string $folder, string $label)
+    {
+        $inbox = $client->getFolder($folder);
         //
-        $query = $inbox->messages()->since(Carbon::now()->subDays(2));
+        $query = $inbox->messages()->since(Carbon::now()->subDays(7));
         if (method_exists($query, 'limit')) {
             $query->limit($this->maxMessages);
         }
         $messages = $query->get();
 
+        $messageCount = $messages->count();
+        Log::channel('mailread')->info("{$folder} {$label} | {$messageCount} messages.");
         foreach ($messages as $message) {
             $body = $message->getTextBody() ?: $message->getHTMLBody();
             // TODO: leave this commented for now
