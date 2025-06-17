@@ -44,7 +44,7 @@ class MailScanner
         $client->connect();
         $inbox = $client->getFolder('INBOX');
 
-        $query = $inbox->messages()->since($token->last_scanned_at ?: Carbon::now()->subDays(2));
+        $query = $inbox->messages()->since($token->last_scanned_at ?: Carbon::now()->subDays(7));
         if (method_exists($query, 'limit')) {
             $query->limit($this->maxMessages);
         }
