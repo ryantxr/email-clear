@@ -6,7 +6,7 @@ use App\Models\UserToken;
 use App\Lib\OpenAiModels;
 use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
-use Webklex\PHPIMAP\ClientManager;
+use Webklex\PHPIMAP\ClientManager as ImapClient;
 
 class MailScanner
 {
@@ -25,11 +25,11 @@ class MailScanner
     /**
      * Scan the inbox for solicitation emails.
      */
-    public function scan(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
+    public function scanGmail(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
     {
         $accessToken = $this->refreshAccessToken($token);
 
-        $client = (new ClientManager())->make([
+        $client = (new ImapClient())->make([
             'host'           => 'imap.gmail.com',
             'port'           => 993,
             'encryption'     => 'ssl',
@@ -83,7 +83,7 @@ class MailScanner
         string $openaiKey,
         string $model = OpenAiModels::GPT_41_NANO
     ): void {
-        $client = (new ClientManager())->make([
+        $client = (new ImapClient())->make([
             'host'          => $host,
             'port'          => $port,
             'encryption'    => $encryption,

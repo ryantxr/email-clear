@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 use App\Services\MailScanner;
 use App\Models\ImapAccount;
 use Illuminate\Console\Command;
-
+use App\Lib\OpenAiModels;
 class ImapScan extends Command
 {
     protected $signature = 'imap:scan';
@@ -14,7 +14,7 @@ class ImapScan extends Command
     public function handle(MailScanner $scanner): int
     {
         $openai = config('services.openai.key');
-        $model = config('services.openai.model', 'gpt-3.5-turbo');
+        $model = config('services.openai.model', OpenAiModels::GPT_41_NANO);
 
         foreach (ImapAccount::all() as $account) {
             $scanner->scanImap(

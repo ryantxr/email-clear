@@ -6,6 +6,7 @@ use App\Models\UserToken;
 use App\Services\MailScanner;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use App\Lib\OpenAiModels;
 
 class GmailScan extends Command
 {
@@ -16,10 +17,10 @@ class GmailScan extends Command
     public function handle(MailScanner $scanner): int
     {
         $openai = config('services.openai.key');
-        $model = config('services.openai.model', 'gpt-3.5-turbo');
+        $model = config('services.openai.model', OpenAiModels::GPT_41_NANO);
         foreach (UserToken::all() as $token) {
             try {
-                $scanner->scan($token, $token->email, $openai, $model);
+                $scanner->scanGmail($token, $token->email, $openai, $model);
             } catch (\Throwable $e) {
                 Log::error('scan failed: ' . $e->getMessage());
             }
