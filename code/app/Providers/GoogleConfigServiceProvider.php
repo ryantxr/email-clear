@@ -37,10 +37,12 @@ class GoogleConfigServiceProvider extends ServiceProvider
             }
         }
 
+        $defaultRedirect = rtrim(config('app.url'), '/') . '/settings/gmail/callback';
+
         config([
             'services.google.client_id' => env('GOOGLE_CLIENT_ID', $credentials['client_id'] ?? null),
             'services.google.client_secret' => env('GOOGLE_CLIENT_SECRET', $credentials['client_secret'] ?? null),
-            'services.google.redirect' => env('GOOGLE_REDIRECT_URI', $credentials['redirect_uris'][0] ?? $credentials['redirect_uri'] ?? null),
+            'services.google.redirect' => env('GOOGLE_REDIRECT_URI', $credentials['redirect_uris'][0] ?? $credentials['redirect_uri'] ?? $defaultRedirect),
         ]);
     }
 }

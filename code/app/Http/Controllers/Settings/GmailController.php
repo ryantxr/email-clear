@@ -68,7 +68,7 @@ class GmailController extends Controller
         $client->addScope('https://mail.google.com/');
         $client->setAccessType('offline');
         $client->setPrompt('consent');
-        $client->setRedirectUri(route('settings.gmail.callback', absolute: false));
+        $client->setRedirectUri(config('services.google.redirect'));
         return $client;
     }
 }
