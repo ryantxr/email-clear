@@ -50,7 +50,7 @@ const disconnect = (id: number) => {
 
                 <div>
                     <Button as-child>
-                        <Link :href="route('gmail.connect')">Connect new Gmail</Link>
+                        <a :href="route('gmail.connect')">Connect new Gmail</a>
                     </Button>
                 </div>
             </div>
