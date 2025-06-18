@@ -24,19 +24,22 @@ class GmailController extends Controller
         $provider = Socialite::driver('google');
         
         
-        $dynamicRedirectUri = config('services.google.redirect') . "?user_id={$id}";
-        Log::debug("redirectUri {$dynamicRedirectUri}");
-        $provider->redirectUrl($dynamicRedirectUri);
-        
+        $staticRedirectUri = config('services.google.redirect');
+        Log::debug("redirectUri {$staticRedirectUri}");
+        $provider->redirectUrl($staticRedirectUri);
 
         return $provider
         ->scopes(['https://mail.google.com/', 'email'])
+        ->with(['state' => $id])
         ->redirect();
     }
-    
+
     public function callback(Request $request)
     {
-        $googleUser = Socialite::driver('google')->user();
+        /** @var \Laravel\Socialite\Two\GoogleProvider */
+        $provider = Socialite::driver('google');
+        $provider->redirectUrl(config('services.google.redirect'));
+        $googleUser = $provider->user();
         
         $token = [
             'access_token'  => $googleUser->token,
