@@ -33,12 +33,16 @@ if ($postUrl) {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_exec($ch);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // allow self-signed certs
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    $result = curl_exec($ch);
     // Check for error and log it
     if ($result === false) {
         $err = curl_error($ch);
         $errno = curl_errno($ch);
         Log::debug("cURL error ($errno): $err");
+    } else {
+        Log::debug($result);
     }
     curl_close($ch);
 }
