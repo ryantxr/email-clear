@@ -28,7 +28,7 @@ class GmailController extends Controller
         $provider->redirectUrl($staticRedirectUri);
 
         return $provider
-        ->scopes(['https://mail.google.com/', 'email'])
+        ->scopes(['https://www.googleapis.com/auth/gmail.modify', 'email'])
         ->with(['state' => $id])
         ->redirect();
     }

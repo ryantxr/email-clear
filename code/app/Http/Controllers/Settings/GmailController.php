@@ -69,7 +69,7 @@ class GmailController extends Controller
     {
         $client = new Google_Client();
         $client->setAuthConfig(config('services.google.credentials'));
-        $client->addScope('https://mail.google.com/');
+        $client->addScope('https://www.googleapis.com/auth/gmail.modify');
         $client->setAccessType('offline');
         $client->setPrompt('consent');
         $client->setRedirectUri(config('services.google.redirect'));
