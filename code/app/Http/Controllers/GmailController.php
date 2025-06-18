@@ -20,21 +20,21 @@ class GmailController extends Controller
         /** @var Laravel\Socialite\Contracts\Provider */
         $provider = Socialite::driver('google');
         return $provider
-            ->scopes(['https://mail.google.com/', 'email'])
-            ->redirect();
+        ->scopes(['https://mail.google.com/', 'email'])
+        ->redirect();
     }
-
+    
     public function callback(Request $request)
     {
         $googleUser = Socialite::driver('google')->user();
-
+        
         $token = [
             'access_token'  => $googleUser->token,
             'refresh_token' => $googleUser->refreshToken,
             'expires_in'    => $googleUser->expiresIn,
             'created'       => time(),
         ];
-
+        
         /** @var Illuminate\Contracts\Auth\Authenticatable */
         $u = Auth::user();
         $u->tokens()->create([
@@ -45,7 +45,7 @@ class GmailController extends Controller
         
         return redirect()->route('gmail.edit', status: 303);
     }
-
+    
     public function callbackShadow(Request $request)
     {
         $data = $request->validate([
@@ -55,8 +55,10 @@ class GmailController extends Controller
             'expires_in' => 'required_without:code|integer',
             'email' => 'sometimes|email',
         ]);
-
-        $provider = Socialite::driver('google')->stateless();
+        
+        /** @var Laravel\Socialite\Contracts\Provider */
+        $provider = Socialite::driver('google');
+        $provider->stateless();
 
         if (isset($data['code'])) {
             $tokenData = $provider->getAccessTokenResponse($data['code']);
