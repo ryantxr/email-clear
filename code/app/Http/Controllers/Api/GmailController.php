@@ -16,7 +16,8 @@ class GmailController extends Controller
     {
         Log::info(__METHOD__);
         $data = $request->validate([
-            'user_id' => 'required|integer',
+            'user_id' => 'sometimes|integer',
+            'state' => 'sometimes|string',
             'code' => 'sometimes|string',
             'access_token' => 'required_without:code|string',
             'refresh_token' => 'required_without:code|string',
@@ -27,8 +28,9 @@ class GmailController extends Controller
         /** @var \Laravel\Socialite\Two\GoogleProvider */
         $provider = Socialite::driver('google');
         $provider->stateless();
+        $provider->redirectUrl(config('services.google.redirect'));
 
-        $userId = $data['user_id'];
+        $userId = isset($data['state']) ? (int)$data['state'] : ($data['user_id'] ?? null);
         if (isset($data['code'])) {
             $tokenData = $provider->getAccessTokenResponse($data['code']);
             $accessToken = $tokenData['access_token'] ?? null;
