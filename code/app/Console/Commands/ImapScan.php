@@ -1,7 +1,7 @@
 <?php
 namespace App\Console\Commands;
 
-use App\Services\MailScanner;
+use App\Services\ImapMailScanner as MailScanner;
 use App\Models\ImapAccount;
 use Illuminate\Console\Command;
 use App\Lib\OpenAiModels;

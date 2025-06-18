@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\UserToken;
-use App\Services\MailScanner;
+use App\Services\GMailScanner as MailScanner;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Lib\OpenAiModels;

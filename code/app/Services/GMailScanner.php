@@ -4,20 +4,20 @@ namespace App\Services;
 
 use App\Models\UserToken;
 use App\Lib\OpenAiModels;
+use App\Services\MailClassifier;
 use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
 use Illuminate\Support\Facades\Log;
-use Webklex\PHPIMAP\ClientManager as ImapClientManager;
-use Webklex\PHPIMAP\Client as ImapClient;
 use Google_Client;
 use Google_Service_Gmail;
 use Google_Service_Gmail_Label;
 use Google_Service_Gmail_ModifyMessageRequest;
 
-class MailScanner
+class GMailScanner
 {
     protected int $maxMessages;
     protected int $throttleMs;
+    protected MailClassifier $classifier;
 
     public function __construct(
         protected HttpClient $httpClient = new HttpClient(),
@@ -26,6 +26,7 @@ class MailScanner
     ) {
         $this->maxMessages = $maxMessages ?? (int) config('scanner.max_messages');
         $this->throttleMs = $throttleMs ?? (int) config('scanner.throttle_ms');
+        $this->classifier = new MailClassifier($this->httpClient); 
     }
 
     /**
@@ -95,7 +96,7 @@ class MailScanner
                 }
             }
             
-            $jsonResponse = $this->classify($body, $openaiKey, $model);
+            $jsonResponse = $this->classifier->classify($body, $openaiKey, $model);
             $responseObject = json_decode($jsonResponse);
             $score = $responseObject->short + $responseObject->pitch + $responseObject->request_call + $responseObject->optout;
 
@@ -106,6 +107,7 @@ class MailScanner
             if ($responseObject->pitch && $responseObject->request_call && $responseObject->optout) {
                 $existing = $message->getLabelIds();
                 if (!in_array($solicitationLabelId, $existing ?? [], true)) {
+                    Log::channel('mailread')->info("Add solicitation label");
                     $mods = new Google_Service_Gmail_ModifyMessageRequest();
                     $mods->setAddLabelIds([$solicitationLabelId]);
                     $service->users_messages->modify('me', $message->getId(), $mods);
@@ -149,131 +151,6 @@ class MailScanner
         $token->save();
 
         return $tokenData['access_token'];
-    }
-
-    /**
-     * Scan a plain IMAP account using username and password.
-     */
-    public function scanImap(
-        string $host,
-        int $port,
-        string $encryption,
-        string $username,
-        string $password,
-        string $openaiKey,
-        string $model = OpenAiModels::GPT_41_NANO
-    ): ?int {
-        $client = (new ImapClientManager())->make([
-            'host'          => $host,
-            'port'          => $port,
-            'encryption'    => $encryption,
-            'validate_cert' => true,
-            'username'      => $username,
-            'password'      => $password,
-            'protocol'      => 'imap',
-        ]);
-        try {
-            $client->connect();
-        } catch (\Throwable $e) {
-            Log::error('IMAP login failed: ' . $e->getMessage());
-            return null;
-        }
-
-        $total = 0;
-        $total += $this->processFolder($client, 'INBOX', $openaiKey, $model, "host: $host, username: $username");
-        $total += $this->processFolder($client, 'Junk', $openaiKey, $model, "host: $host, username: $username");
-        return $total;
-    }
-
-    /**
-     * 
-     */
-    protected function processFolder(ImapClient $client, string $folder, string $openaiKey, string $model, string $label): int
-    {
-        $inbox = $client->getFolder($folder);
-        //
-        $query = $inbox->messages()->since(Carbon::now()->subDays(7));
-        if (method_exists($query, 'limit')) {
-            $query->limit($this->maxMessages);
-        }
-        $messages = $query->get();
-
-        $messageCount = $messages->count();
-        Log::channel('mailread')->info("{$folder} {$label} | {$messageCount} messages.");
-        $count = 0;
-        foreach ($messages as $message) {
-            $body = $message->getTextBody() ?: $message->getHTMLBody();
-            $date = $message->getDate();
-            $subject = $message->getSubject();
-            $fromAttr = $message->getFrom();
-            $from = '';
-            if (is_iterable($fromAttr)) {
-                $parts = [];
-                foreach ($fromAttr as $addr) {
-                    $parts[] = (string) $addr;
-                }
-                $from = implode(', ', $parts);
-            } else {
-                $from = (string) $fromAttr;
-            }
-            // TODO: leave this commented for now
-            // We will enable this at a later time
-            if ( config('services.emailclear.enable_ai') ) {
-                $jsonResponse = $this->classify($body, $openaiKey, $model);
-            } else {
-                $jsonResponse = $this->classifyFake($body, $openaiKey, $model);
-            }
-            Log::channel('mailread')->info("{$jsonResponse}");
-
-            $responseObject = json_decode($jsonResponse);
-            $score = $responseObject->short + $responseObject->pitch + $responseObject->request_call + $responseObject->optout;
-            $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
-            Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
-
-
-            usleep($this->throttleMs * 1000);
-            $count++;
-        }
-        return $count;
-    }
-
-    /**
-     * This is a stub to test this out to make sure everything is flowing correctly.
-     */
-    protected function classifyFake(string $body, string $key, string $model): string
-    {
-        return '{"short": 1,"pitch":1,"request_call":1, "optout":1}';
-    }
-
-    protected function classify(string $body, string $key, string $model): string
-    {
-        $prompt = "Given the following email, rate it 0 or 1 for each criterion:\n" .
-            "1. Is the email short?\n" .
-            "2. Is it pitching a product or service?\n" .
-            "3. Is it requesting a short follow-up call (10-15 minutes)?\n" .
-            "4. Does it contain opt-out language?\n" .
-            "Provide each score. in JSON format {\"short\": 1,\"pitch\":1,\"request_call\":1, \"optout\":1}\n" .
-            "Email:\n{$body}";
-
-        $data = [
-            'model' => $model,
-            'messages' => [
-                ['role' => 'user', 'content' => $prompt]
-            ],
-            'temperature' => 0,
-        ];
-
-        $response = $this->httpClient->post('https://api.openai.com/v1/chat/completions', [
-            'headers' => [
-                'Content-Type'  => 'application/json',
-                'Authorization' => 'Bearer ' . $key,
-            ],
-            'json' => $data,
-        ]);
-
-        $result = json_decode($response->getBody(), true);
-
-        return trim($result['choices'][0]['message']['content'] ?? '');
     }
 
     /**

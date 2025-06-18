@@ -13,8 +13,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(MailScanner::class, function ($app) {
-            return new MailScanner(
+        $this->app->bind(GMailScanner::class, function ($app) {
+            return new GMailScanner(
+                new HttpClient(),
+                $app['config']->get('scanner.max_messages'),
+                $app['config']->get('scanner.throttle_ms')
+            );
+        });
+        $this->app->bind(ImapMailScanner::class, function ($app) {
+            return new ImapMailScanner(
                 new HttpClient(),
                 $app['config']->get('scanner.max_messages'),
                 $app['config']->get('scanner.throttle_ms')
