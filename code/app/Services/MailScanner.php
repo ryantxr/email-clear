@@ -66,6 +66,7 @@ class MailScanner
             }
             $body = $message->getTextBody() ?: $message->getHTMLBody();
             $analysis = $this->classify($body, $openaiKey, $model);
+            // Right here, we will label the email if it isn't already labeled.
             usleep($this->throttleMs * 1000);
             $count++;
             // TODO: add Gmail labeling via API
@@ -75,6 +76,35 @@ class MailScanner
             $token->last_scanned_at = $mostRecent;
             $token->save();
         }
+    }
+    protected function refreshAccessToken(UserToken $token): ?string
+    {
+        $tokenData = $token->token;
+
+        // Bail out if token column does not contain JSON
+        if (!is_array($tokenData)) {
+            Log::warning('Token column is not JSON for token ID ' . $token->id);
+            return null;
+        }
+
+        // If access token is still valid, return it
+        $expiry = ($tokenData['created'] ?? 0) + ($tokenData['expires_in'] ?? 0) - 60;
+        if (time() < $expiry && !empty($tokenData['access_token'])) {
+            return $tokenData['access_token'];
+        }
+
+        $client = new \Google_Client();
+        $client->setAuthConfig(config('services.google.credentials'));
+        $client->setAccessType('offline');
+        $client->refreshToken($token->refresh_token);
+        $accessToken = $client->getAccessToken();
+        $tokenData['access_token'] = $accessToken['access_token'] ?? null;
+        $tokenData['expires_in'] = $accessToken['expires_in'] ?? ($tokenData['expires_in'] ?? 3600);
+        $tokenData['created'] = time();
+        $token->token = $tokenData;
+        $token->save();
+
+        return $tokenData['access_token'];
     }
 
     /**
@@ -194,35 +224,5 @@ class MailScanner
 
         $result = json_decode($response->getBody(), true);
         return trim($result['choices'][0]['message']['content'] ?? '');
-    }
-
-    protected function refreshAccessToken(UserToken $token): ?string
-    {
-        $tokenData = $token->token;
-
-        // Bail out if token column does not contain JSON
-        if (!is_array($tokenData)) {
-            Log::warning('Token column is not JSON for token ID ' . $token->id);
-            return null;
-        }
-
-        // If access token is still valid, return it
-        $expiry = ($tokenData['created'] ?? 0) + ($tokenData['expires_in'] ?? 0) - 60;
-        if (time() < $expiry && !empty($tokenData['access_token'])) {
-            return $tokenData['access_token'];
-        }
-
-        $client = new \Google_Client();
-        $client->setAuthConfig(config('services.google.credentials'));
-        $client->setAccessType('offline');
-        $client->refreshToken($token->refresh_token);
-        $accessToken = $client->getAccessToken();
-        $tokenData['access_token'] = $accessToken['access_token'] ?? null;
-        $tokenData['expires_in'] = $accessToken['expires_in'] ?? ($tokenData['expires_in'] ?? 3600);
-        $tokenData['created'] = time();
-        $token->token = $tokenData;
-        $token->save();
-
-        return $tokenData['access_token'];
     }
 }
