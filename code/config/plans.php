@@ -2,11 +2,11 @@
 
 return [
     'free' => [
-        'max_tokens'  => 1,
-        'daily_limit' => env('FREE_DAILY_LIMIT', 100),
+        'max_tokens'   => 1,
+        'monthly_limit' => env('FREE_MONTHLY_LIMIT', 100),
     ],
     'pro' => [
-        'max_tokens'  => 5,
-        'daily_limit' => env('PRO_DAILY_LIMIT', 1000),
+        'max_tokens'   => 5,
+        'monthly_limit' => env('PRO_MONTHLY_LIMIT', 1000),
     ],
 ];
