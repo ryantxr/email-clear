@@ -46,7 +46,7 @@ displayed.
 
 ## Laravel integration
 
-The application under `code/` now provides a simple Gmail connection flow. After registering and verifying your account, visit `/settings/gmail` to connect your mailbox. A console command `php artisan gmail:scan` will read recent messages and update the `user_tokens` table with the last scanned time.
+The application under `code/` now provides a simple Gmail connection flow. After registering and verifying your account, visit `/settings/gmail` to connect your mailbox. A console command `php artisan gmail:scan` will read recent messages and update the `user_tokens` table with the last scanned time. **Scanning now uses the Gmail API instead of IMAP.**
 
 A localhost OAuth listener may also capture the tokens or authorization code and POST them to `/api/settings/gmail/callback-shadow`. Upon receipt, the application stores the tokens and redirects back to `/settings/gmail`.
 
