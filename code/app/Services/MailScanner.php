@@ -29,12 +29,12 @@ class MailScanner
     /**
      * Scan the inbox for solicitation emails.
      */
-    public function scanGmail(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): int
+    public function scanGmail(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): ?int
     {
         $accessToken = $this->refreshAccessToken($token);
         if (!$accessToken) {
             Log::warning('Skipping scan: invalid token for ID ' . $token->id);
-            return 0;
+            return null;
         }
 
         $googleClient = new Google_Client();
@@ -79,6 +79,11 @@ class MailScanner
             if (!$body) {
                 $body = $message->getSnippet();
             }
+            $score = 6;
+            $from = null; // FIXME: Should be the who the email is from
+            $subject = null; // FIXME: Should be email subject
+            $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
+            Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
 
             $analysis = $this->classify($body, $openaiKey, $model);
             // Right here, we will label the email if it isn't already labeled.
@@ -133,7 +138,7 @@ class MailScanner
         string $password,
         string $openaiKey,
         string $model = OpenAiModels::GPT_41_NANO
-    ): int {
+    ): ?int {
         $client = (new ImapClientManager())->make([
             'host'          => $host,
             'port'          => $port,
@@ -147,7 +152,7 @@ class MailScanner
             $client->connect();
         } catch (\Throwable $e) {
             Log::error('IMAP login failed: ' . $e->getMessage());
-            return;
+            return null;
         }
 
         $total = 0;
