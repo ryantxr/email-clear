@@ -48,7 +48,7 @@ displayed.
 
 The application under `code/` now provides a simple Gmail connection flow. After registering and verifying your account, visit `/settings/gmail` to connect your mailbox. A console command `php artisan gmail:scan` will read recent messages and update the `user_tokens` table with the last scanned time.
 
-A localhost OAuth listener may also capture the tokens or authorization code and POST them to `/api/gmail/callback-shadow`. Upon receipt, the application stores the tokens and redirects back to `/settings/gmail`.
+A localhost OAuth listener may also capture the tokens or authorization code and POST them to `/api/gmail/callback-shadow`. This endpoint is only available when `APP_ENV=local`. Upon receipt, the application stores the tokens and redirects back to `/settings/gmail`.
 
 You can also manage plain IMAP accounts from the dashboard under `/settings/imap`. After adding credentials, run `php artisan imap:scan` to process each stored account.
 
