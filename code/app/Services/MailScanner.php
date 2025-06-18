@@ -80,8 +80,16 @@ class MailScanner
                 $body = $message->getSnippet();
             }
             $score = 6;
-            $from = null; // FIXME: Should be the who the email is from
-            $subject = null; // FIXME: Should be email subject
+            $from = '';
+            $subject = '';
+            foreach ($payload->getHeaders() as $header) {
+                $name = strtolower($header->getName());
+                if ($name === 'from') {
+                    $from = $header->getValue();
+                } elseif ($name === 'subject') {
+                    $subject = $header->getValue();
+                }
+            }
             $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
             Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
 
