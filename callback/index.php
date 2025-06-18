@@ -16,7 +16,7 @@ $redirectUrl = $config['redirect_to'] ?? '/';
 
 Log::debug("postUrl $postUrl");
 Log::debug("redirectUrl $redirectUrl");
-
+Log::debug(json_encode(print_r($_GET, true)));
 $data = [];
 if (isset($_GET['user_id'])) {
     Log::debug("User id = " . $_GET['user_id']);
