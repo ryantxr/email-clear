@@ -4,7 +4,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 $clientSecret = __DIR__ . '/data/client_secret.json';
 $client = new Google_Client();
 $client->setAuthConfig($clientSecret);
-$client->addScope('https://mail.google.com/'); // Full Gmail access for IMAP
+$client->addScope('https://www.googleapis.com/auth/gmail.modify'); // Gmail modify scope
 $client->setAccessType('offline');
 $client->setPrompt('select_account consent');
 $client->setRedirectUri('urn:ietf:wg:oauth:2.0:oob'); // Desktop flow
