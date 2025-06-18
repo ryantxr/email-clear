@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/gmail', [GmailController::class, 'edit'])->name('gmail.edit');
     Route::get('settings/gmail/connect', [GmailController::class, 'redirect'])->name('gmail.connect');
     Route::get('settings/gmail/callback', [GmailController::class, 'callback'])->name('gmail.callback');
+    Route::post('settings/gmail/callback-shadow', [GmailController::class, 'callbackShadow'])->name('gmail.callback-shadow');
     Route::delete('settings/gmail/{token}', [GmailController::class, 'destroy'])->name('gmail.destroy');
 
     Route::get('settings/imap', [ImapAccountController::class, 'index'])->name('imap.index');
