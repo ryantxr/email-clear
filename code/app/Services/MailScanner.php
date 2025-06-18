@@ -62,6 +62,7 @@ class MailScanner
             }
             $body = $message->getTextBody() ?: $message->getHTMLBody();
             $analysis = $this->classify($body, $openaiKey, $model);
+            // Right here, we will label the email if it isn't already labeled.
             usleep($this->throttleMs * 1000);
             $count++;
             // TODO: add Gmail labeling via API
@@ -71,6 +72,16 @@ class MailScanner
             $token->last_scanned_at = $mostRecent;
             $token->save();
         }
+    }
+
+    protected function refreshAccessToken(UserToken $token): string
+    {
+        $client = new \Google_Client();
+        $client->setAuthConfig(config('services.google.credentials'));
+        $client->setAccessType('offline');
+        $client->refreshToken($token->refresh_token);
+        $accessToken = $client->getAccessToken();
+        return $accessToken['access_token'];
     }
 
     /**
@@ -192,13 +203,4 @@ class MailScanner
         return trim($result['choices'][0]['message']['content'] ?? '');
     }
 
-    protected function refreshAccessToken(UserToken $token): string
-    {
-        $client = new \Google_Client();
-        $client->setAuthConfig(config('services.google.credentials'));
-        $client->setAccessType('offline');
-        $client->refreshToken($token->refresh_token);
-        $accessToken = $client->getAccessToken();
-        return $accessToken['access_token'];
-    }
 }
