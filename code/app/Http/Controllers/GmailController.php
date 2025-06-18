@@ -48,6 +48,7 @@ class GmailController extends Controller
     
     public function callbackShadow(Request $request)
     {
+        Log::info(__METHOD__);
         $data = $request->validate([
             'code' => 'sometimes|string',
             'access_token' => 'required_without:code|string',
@@ -55,7 +56,7 @@ class GmailController extends Controller
             'expires_in' => 'required_without:code|integer',
             'email' => 'sometimes|email',
         ]);
-        
+        Log::debug(print_r($data, true));
         /** @var Laravel\Socialite\Contracts\Provider */
         $provider = Socialite::driver('google');
         $provider->stateless();
@@ -83,11 +84,25 @@ class GmailController extends Controller
 
         /** @var Illuminate\Contracts\Auth\Authenticatable */
         $u = Auth::user();
-        $u->tokens()->create([
+        Log::info(json_encode([
+            'user_id' => $u->id,
+            'email' => $email,
+            'refresh_token' => $refreshToken,
+            'token' => $token,
+        ]));
+
+        UserToken::create([
+            'user_id' => $u->id,
             'email' => $email,
             'refresh_token' => $refreshToken,
             'token' => $token,
         ]);
+
+        // $u->tokens()->create([
+        //     'email' => $email,
+        //     'refresh_token' => $refreshToken,
+        //     'token' => $token,
+        // ]);
 
         return redirect()->route('gmail.edit', status: 303);
     }
