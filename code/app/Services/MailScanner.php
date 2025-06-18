@@ -11,6 +11,8 @@ use Webklex\PHPIMAP\ClientManager as ImapClientManager;
 use Webklex\PHPIMAP\Client as ImapClient;
 use Google_Client;
 use Google_Service_Gmail;
+use Google_Service_Gmail_Label;
+use Google_Service_Gmail_ModifyMessageRequest;
 
 class MailScanner
 {
@@ -42,6 +44,8 @@ class MailScanner
         $googleClient->setAccessToken(['access_token' => $accessToken]);
 
         $service = new Google_Service_Gmail($googleClient);
+
+        $solicitationLabelId = $this->solicitationLabelId($service);
 
         $after = $token->last_scanned_at
             ? 'after:' . $token->last_scanned_at->timestamp
@@ -99,11 +103,16 @@ class MailScanner
             Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
             Log::channel('mailread')->debug($jsonResponse);
             // Right here, we will label the email if it isn't already labeled.
-            if ( $responseObject->pitch && $responseObject->request_call && $responseObject->optout ) {
-                // if the email does not have label 'solicitation' then add it.
+            if ($responseObject->pitch && $responseObject->request_call && $responseObject->optout) {
+                $existing = $message->getLabelIds();
+                if (!in_array($solicitationLabelId, $existing ?? [], true)) {
+                    $mods = new Google_Service_Gmail_ModifyMessageRequest();
+                    $mods->setAddLabelIds([$solicitationLabelId]);
+                    $service->users_messages->modify('me', $message->getId(), $mods);
+                    $count++;
+                }
             }
             usleep($this->throttleMs * 1000);
-            // TODO: add Gmail labeling via API
         }
 
         if ($mostRecent) {
@@ -265,5 +274,28 @@ class MailScanner
         $result = json_decode($response->getBody(), true);
 
         return trim($result['choices'][0]['message']['content'] ?? '');
+    }
+
+    /**
+     * Retrieve the ID for the solicitation label, creating it if necessary.
+     */
+    protected function solicitationLabelId(Google_Service_Gmail $service): string
+    {
+        $labelName = 'solicitation';
+        $list = $service->users_labels->listUsersLabels('me');
+        foreach ($list->getLabels() as $label) {
+            if (strtolower($label->getName()) === $labelName) {
+                return $label->getId();
+            }
+        }
+
+        $label = new Google_Service_Gmail_Label();
+        $label->setName($labelName);
+        $label->setLabelListVisibility('labelShow');
+        $label->setMessageListVisibility('show');
+
+        $created = $service->users_labels->create('me', $label);
+
+        return $created->getId();
     }
 }
