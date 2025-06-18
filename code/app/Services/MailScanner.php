@@ -29,12 +29,12 @@ class MailScanner
     /**
      * Scan the inbox for solicitation emails.
      */
-    public function scanGmail(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
+    public function scanGmail(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): int
     {
         $accessToken = $this->refreshAccessToken($token);
         if (!$accessToken) {
             Log::warning('Skipping scan: invalid token for ID ' . $token->id);
-            return;
+            return 0;
         }
 
         $googleClient = new Google_Client();
@@ -53,7 +53,11 @@ class MailScanner
         $messages = $list->getMessages() ?? [];
 
         $mostRecent = $token->last_scanned_at;
+        $count = 0;
         foreach ($messages as $ref) {
+            if ($count >= $this->maxMessages) {
+                break;
+            }
             $message = $service->users_messages->get('me', $ref->getId(), ['format' => 'full']);
             $internalDate = (int) $message->getInternalDate();
             $date = Carbon::createFromTimestampMs($internalDate);
@@ -86,6 +90,7 @@ class MailScanner
             $token->last_scanned_at = $mostRecent;
             $token->save();
         }
+        return $count;
     }
     protected function refreshAccessToken(UserToken $token): ?string
     {
@@ -128,7 +133,7 @@ class MailScanner
         string $password,
         string $openaiKey,
         string $model = OpenAiModels::GPT_41_NANO
-    ): void {
+    ): int {
         $client = (new ImapClientManager())->make([
             'host'          => $host,
             'port'          => $port,
@@ -145,14 +150,16 @@ class MailScanner
             return;
         }
 
-        $this->processFolder($client, 'INBOX', $openaiKey, $model, "host: $host, username: $username");
-        $this->processFolder($client, 'Junk', $openaiKey, $model, "host: $host, username: $username");
+        $total = 0;
+        $total += $this->processFolder($client, 'INBOX', $openaiKey, $model, "host: $host, username: $username");
+        $total += $this->processFolder($client, 'Junk', $openaiKey, $model, "host: $host, username: $username");
+        return $total;
     }
 
     /**
      * 
      */
-    protected function processFolder(ImapClient $client, string $folder, string $openaiKey, string $model, string $label)
+    protected function processFolder(ImapClient $client, string $folder, string $openaiKey, string $model, string $label): int
     {
         $inbox = $client->getFolder($folder);
         //
@@ -164,6 +171,7 @@ class MailScanner
 
         $messageCount = $messages->count();
         Log::channel('mailread')->info("{$folder} {$label} | {$messageCount} messages.");
+        $count = 0;
         foreach ($messages as $message) {
             $body = $message->getTextBody() ?: $message->getHTMLBody();
             $date = $message->getDate();
@@ -192,10 +200,12 @@ class MailScanner
             $score = $responseObject->short + $responseObject->pitch + $responseObject->request_call + $responseObject->optout;
             $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
             Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
-            
+
 
             usleep($this->throttleMs * 1000);
+            $count++;
         }
+        return $count;
     }
 
     /**

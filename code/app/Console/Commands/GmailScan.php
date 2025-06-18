@@ -19,8 +19,16 @@ class GmailScan extends Command
         $openai = config('services.openai.key');
         $model = config('services.openai.model', OpenAiModels::GPT_41_NANO);
         foreach (UserToken::all() as $token) {
+            $user = $token->user;
+            if (method_exists($user, 'canScanMore') && !$user->canScanMore()) {
+                Log::info('monthly limit reached for user ' . $user->id);
+                continue;
+            }
             try {
-                $scanner->scanGmail($token, $token->email, $openai, $model);
+                $count = $scanner->scanGmail($token, $token->email, $openai, $model);
+                if (method_exists($user, 'incrementMonthlyScanned')) {
+                    $user->incrementMonthlyScanned($count);
+                }
             } catch (\Throwable $e) {
                 Log::error('scan failed: ' . $e->getMessage());
             }

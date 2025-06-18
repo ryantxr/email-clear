@@ -22,6 +22,9 @@ class ImapAccountController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if (method_exists($request->user(), 'canAddEmail') && !$request->user()->canAddEmail()) {
+            return back(303);
+        }
         $data = $request->validate([
             'email' => ['required', 'email'],
             'host' => ['required', 'string'],

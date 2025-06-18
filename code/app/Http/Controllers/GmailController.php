@@ -39,16 +39,20 @@ class GmailController extends Controller
         $provider = Socialite::driver('google');
         $provider->redirectUrl(config('services.google.redirect'));
         $googleUser = $provider->user();
-        
+
+        /** @var \Illuminate\Contracts\Auth\Authenticatable */
+        $u = Auth::user();
+        if (method_exists($u, 'canAddEmail') && !$u->canAddEmail()) {
+            return back(303);
+        }
+
         $token = [
             'access_token'  => $googleUser->token,
             'refresh_token' => $googleUser->refreshToken,
             'expires_in'    => $googleUser->expiresIn,
             'created'       => time(),
         ];
-        
-        /** @var Illuminate\Contracts\Auth\Authenticatable */
-        $u = Auth::user();
+
         $u->tokens()->create([
             'email' => $googleUser->email,
             'refresh_token' => $googleUser->refreshToken,

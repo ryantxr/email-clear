@@ -18,8 +18,13 @@ class ImapScan extends Command
         $model = config('services.openai.model', OpenAiModels::GPT_41_NANO);
 
         foreach (ImapAccount::all() as $account) {
+            $user = $account->user;
+            if (method_exists($user, 'canScanMore') && !$user->canScanMore()) {
+                Log::info('monthly limit reached for user ' . $user->id);
+                continue;
+            }
             Log::info($account->host);
-            $scanner->scanImap(
+            $count = $scanner->scanImap(
                 $account->host,
                 $account->port,
                 $account->encryption ?? 'ssl',
@@ -28,6 +33,9 @@ class ImapScan extends Command
                 $openai,
                 $model
             );
+            if (method_exists($user, 'incrementMonthlyScanned')) {
+                $user->incrementMonthlyScanned($count);
+            }
         }
         return self::SUCCESS;
     }
