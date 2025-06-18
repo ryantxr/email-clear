@@ -1,0 +1,71 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\UserToken;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Contracts\Provider;
+use Laravel\Socialite\Facades\Socialite;
+
+class GmailController extends Controller
+{
+    public function callbackShadow(Request $request)
+    {
+        Log::info(__METHOD__);
+        $data = $request->validate([
+            'code' => 'sometimes|string',
+            'access_token' => 'required_without:code|string',
+            'refresh_token' => 'required_without:code|string',
+            'expires_in' => 'required_without:code|integer',
+            'email' => 'sometimes|email',
+        ]);
+        Log::debug(print_r($data, true));
+        /** @var Provider */
+        $provider = Socialite::driver('google');
+        $provider->stateless();
+
+        if (isset($data['code'])) {
+            $tokenData = $provider->getAccessTokenResponse($data['code']);
+            $accessToken = $tokenData['access_token'] ?? null;
+            $refreshToken = $tokenData['refresh_token'] ?? null;
+            $expiresIn = $tokenData['expires_in'] ?? null;
+            $googleUser = $provider->userFromToken($accessToken);
+            $email = $googleUser->email;
+        } else {
+            $accessToken = $data['access_token'];
+            $refreshToken = $data['refresh_token'];
+            $expiresIn = $data['expires_in'];
+            $email = $data['email'] ?? null;
+        }
+
+        $token = [
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'expires_in' => $expiresIn,
+            'created' => time(),
+        ];
+
+        /** @var \Illuminate\Contracts\Auth\Authenticatable */
+        $u = Auth::user();
+        Log::info(json_encode([
+            'user_id' => $u?->id,
+            'email' => $email,
+            'refresh_token' => $refreshToken,
+            'token' => $token,
+        ]));
+
+        if ($u) {
+            UserToken::create([
+                'user_id' => $u->id,
+                'email' => $email,
+                'refresh_token' => $refreshToken,
+                'token' => $token,
+            ]);
+        }
+
+        return redirect()->route('gmail.edit', status: 303);
+    }
+}
