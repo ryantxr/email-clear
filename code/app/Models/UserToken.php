@@ -29,6 +29,7 @@ class UserToken extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'token' => 'array',
         'refresh_token' => 'encrypted',
         'last_scanned_at' => 'datetime',
     ];
