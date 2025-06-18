@@ -30,5 +30,3 @@ Route::middleware('auth')->group(function () {
     Route::post('settings/imap', [ImapAccountController::class, 'store'])->name('imap.store');
     Route::delete('settings/imap/{account}', [ImapAccountController::class, 'destroy'])->name('imap.destroy');
 });
-
-Route::post('settings/gmail/callback-shadow', [GmailController::class, 'callbackShadow'])->name('gmail.callback-shadow');
