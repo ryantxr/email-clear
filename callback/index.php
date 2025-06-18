@@ -1,4 +1,10 @@
 <?php
+/*
+This file is only for doing oauth on local.
+In a case where the application is running on vm and it lives on a
+made up domain, this file can be run on localhost and post the values
+back to the app via a local-only api call.
+*/
 class Log
 {
     static $file = __DIR__ . '/logs/output.log';

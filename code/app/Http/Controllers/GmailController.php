@@ -23,7 +23,6 @@ class GmailController extends Controller
         /** @var \Laravel\Socialite\Two\GoogleProvider */
         $provider = Socialite::driver('google');
         
-        
         $staticRedirectUri = config('services.google.redirect');
         Log::debug("redirectUri {$staticRedirectUri}");
         $provider->redirectUrl($staticRedirectUri);
