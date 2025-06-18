@@ -56,6 +56,7 @@ class MailScanner
         $count = 0;
         foreach ($messages as $ref) {
             if ($count >= $this->maxMessages) {
+                Log::channel('mailread')->warning("Exceeded max messages");
                 break;
             }
             $message = $service->users_messages->get('me', $ref->getId(), ['format' => 'full']);
@@ -79,7 +80,6 @@ class MailScanner
             if (!$body) {
                 $body = $message->getSnippet();
             }
-            $score = 6;
             $from = '';
             $subject = '';
             foreach ($payload->getHeaders() as $header) {
@@ -90,11 +90,18 @@ class MailScanner
                     $subject = $header->getValue();
                 }
             }
+            
+            $jsonResponse = $this->classify($body, $openaiKey, $model);
+            $responseObject = json_decode($jsonResponse);
+            $score = $responseObject->short + $responseObject->pitch + $responseObject->request_call + $responseObject->optout;
+
             $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
             Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
-
-            $analysis = $this->classify($body, $openaiKey, $model);
+            Log::channel('mailread')->debug($jsonResponse);
             // Right here, we will label the email if it isn't already labeled.
+            if ( $responseObject->pitch && $responseObject->request_call && $responseObject->optout ) {
+                // if the email does not have label 'solicitation' then add it.
+            }
             usleep($this->throttleMs * 1000);
             // TODO: add Gmail labeling via API
         }
@@ -236,7 +243,7 @@ class MailScanner
             "2. Is it pitching a product or service?\n" .
             "3. Is it requesting a short follow-up call (10-15 minutes)?\n" .
             "4. Does it contain opt-out language?\n" .
-            "Provide each score, and then the total as 'Total'. in JSON format {\"short\": 1,\"pitch\":1,\"request_call\":1, \"optout\":1}\n" .
+            "Provide each score. in JSON format {\"short\": 1,\"pitch\":1,\"request_call\":1, \"optout\":1}\n" .
             "Email:\n{$body}";
 
         $data = [
@@ -256,6 +263,7 @@ class MailScanner
         ]);
 
         $result = json_decode($response->getBody(), true);
+
         return trim($result['choices'][0]['message']['content'] ?? '');
     }
 }

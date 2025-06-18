@@ -16,6 +16,7 @@ class GmailScan extends Command
 
     public function handle(MailScanner $scanner): int
     {
+        Log::info(__METHOD__);
         $openai = config('services.openai.key');
         $model = config('services.openai.model', OpenAiModels::GPT_41_NANO);
         foreach (UserToken::all() as $token) {
