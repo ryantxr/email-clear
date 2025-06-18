@@ -1,7 +1,11 @@
 <?php
 
 namespace App\Http\Controllers\Settings;
-
+/*
+Yes, I know this controller isn't used.
+I plan to keep this as a reference since it implements
+oauth with directly with the google client.
+*/
 use App\Http\Controllers\Controller;
 use App\Models\UserToken;
 use Google_Client;
@@ -65,10 +69,10 @@ class GmailController extends Controller
     {
         $client = new Google_Client();
         $client->setAuthConfig(config('services.google.credentials'));
-        $client->addScope('https://mail.google.com/');
+        $client->addScope('https://www.googleapis.com/auth/gmail.modify');
         $client->setAccessType('offline');
         $client->setPrompt('consent');
-        $client->setRedirectUri(route('settings.gmail.callback', absolute: false));
+        $client->setRedirectUri(config('services.google.redirect'));
         return $client;
     }
 }

@@ -4,7 +4,8 @@ namespace App\Console\Commands;
 use App\Services\MailScanner;
 use App\Models\ImapAccount;
 use Illuminate\Console\Command;
-
+use App\Lib\OpenAiModels;
+use Illuminate\Support\Facades\Log;
 class ImapScan extends Command
 {
     protected $signature = 'imap:scan';
@@ -14,10 +15,16 @@ class ImapScan extends Command
     public function handle(MailScanner $scanner): int
     {
         $openai = config('services.openai.key');
-        $model = config('services.openai.model', 'gpt-3.5-turbo');
+        $model = config('services.openai.model', OpenAiModels::GPT_41_NANO);
 
         foreach (ImapAccount::all() as $account) {
-            $scanner->scanImap(
+            $user = $account->user;
+            if (method_exists($user, 'canScanMore') && !$user->canScanMore()) {
+                Log::info('monthly limit reached for user ' . $user->id);
+                continue;
+            }
+            Log::info($account->host);
+            $count = $scanner->scanImap(
                 $account->host,
                 $account->port,
                 $account->encryption ?? 'ssl',
@@ -26,6 +33,9 @@ class ImapScan extends Command
                 $openai,
                 $model
             );
+            if (method_exists($user, 'incrementMonthlyScanned')) {
+                $user->incrementMonthlyScanned($count);
+            }
         }
         return self::SUCCESS;
     }

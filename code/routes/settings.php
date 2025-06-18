@@ -22,10 +22,10 @@ Route::middleware('auth')->group(function () {
     })->name('appearance');
 
     Route::get('settings/gmail', [GmailController::class, 'edit'])->name('gmail.edit');
-    Route::post('settings/gmail/connect', [GmailController::class, 'redirect'])->name('gmail.connect');
+    Route::get('settings/gmail/connect', [GmailController::class, 'redirect'])->name('gmail.connect');
     Route::get('settings/gmail/callback', [GmailController::class, 'callback'])->name('gmail.callback');
     Route::delete('settings/gmail/{token}', [GmailController::class, 'destroy'])->name('gmail.destroy');
-
+    
     Route::get('settings/imap', [ImapAccountController::class, 'index'])->name('imap.index');
     Route::post('settings/imap', [ImapAccountController::class, 'store'])->name('imap.store');
     Route::delete('settings/imap/{account}', [ImapAccountController::class, 'destroy'])->name('imap.destroy');

@@ -6,7 +6,13 @@ use App\Models\UserToken;
 use App\Lib\OpenAiModels;
 use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
-use Webklex\PHPIMAP\ClientManager;
+use Illuminate\Support\Facades\Log;
+use Webklex\PHPIMAP\ClientManager as ImapClientManager;
+use Webklex\PHPIMAP\Client as ImapClient;
+use Google_Client;
+use Google_Service_Gmail;
+use Google_Service_Gmail_Label;
+use Google_Service_Gmail_ModifyMessageRequest;
 
 class MailScanner
 {
@@ -25,50 +31,124 @@ class MailScanner
     /**
      * Scan the inbox for solicitation emails.
      */
-    public function scan(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
+    public function scanGmail(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): ?int
     {
         $accessToken = $this->refreshAccessToken($token);
-
-        $client = (new ClientManager())->make([
-            'host'           => 'imap.gmail.com',
-            'port'           => 993,
-            'encryption'     => 'ssl',
-            'validate_cert'  => true,
-            'username'       => $username,
-            'password'       => $accessToken,
-            'authentication' => 'oauth',
-        ]);
-
-        $client->connect();
-        $inbox = $client->getFolder('INBOX');
-
-        $query = $inbox->messages()->since($token->last_scanned_at ?: Carbon::now()->subDays(2));
-        if (method_exists($query, 'limit')) {
-            $query->limit($this->maxMessages);
+        if (!$accessToken) {
+            Log::warning('Skipping scan: invalid token for ID ' . $token->id);
+            return null;
         }
-        $messages = $query->get();
+
+        $googleClient = new Google_Client();
+        $googleClient->setAuthConfig(config('services.google.credentials'));
+        $googleClient->setAccessToken(['access_token' => $accessToken]);
+
+        $service = new Google_Service_Gmail($googleClient);
+
+        $solicitationLabelId = $this->solicitationLabelId($service);
+
+        $after = $token->last_scanned_at
+            ? 'after:' . $token->last_scanned_at->timestamp
+            : 'newer_than:7d';
+        $list = $service->users_messages->listUsersMessages('me', [
+            'q' => $after,
+            'maxResults' => $this->maxMessages,
+        ]);
+        $messages = $list->getMessages() ?? [];
 
         $mostRecent = $token->last_scanned_at;
         $count = 0;
-        foreach ($messages as $message) {
+        foreach ($messages as $ref) {
             if ($count >= $this->maxMessages) {
+                Log::channel('mailread')->warning("Exceeded max messages");
                 break;
             }
-            $date = $message->getDate();
+            $message = $service->users_messages->get('me', $ref->getId(), ['format' => 'full']);
+            $internalDate = (int) $message->getInternalDate();
+            $date = Carbon::createFromTimestampMs($internalDate);
             if (!$mostRecent || $date->gt($mostRecent)) {
                 $mostRecent = $date;
             }
-            $body = $message->getTextBody() ?: $message->getHTMLBody();
-            $analysis = $this->classify($body, $openaiKey, $model);
+
+            $payload = $message->getPayload();
+            $bodyData = $payload->getBody()->getData();
+            if (!$bodyData && $payload->getParts()) {
+                foreach ($payload->getParts() as $part) {
+                    if ($part->getMimeType() === 'text/plain' && $part->getBody()) {
+                        $bodyData = $part->getBody()->getData();
+                        break;
+                    }
+                }
+            }
+            $body = $bodyData ? base64_decode(strtr($bodyData, '-_', '+/')) : '';
+            if (!$body) {
+                $body = $message->getSnippet();
+            }
+            $from = '';
+            $subject = '';
+            foreach ($payload->getHeaders() as $header) {
+                $name = strtolower($header->getName());
+                if ($name === 'from') {
+                    $from = $header->getValue();
+                } elseif ($name === 'subject') {
+                    $subject = $header->getValue();
+                }
+            }
+            
+            $jsonResponse = $this->classify($body, $openaiKey, $model);
+            $responseObject = json_decode($jsonResponse);
+            $score = $responseObject->short + $responseObject->pitch + $responseObject->request_call + $responseObject->optout;
+
+            $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
+            Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
+            Log::channel('mailread')->debug($jsonResponse);
+            // Right here, we will label the email if it isn't already labeled.
+            if ($responseObject->pitch && $responseObject->request_call && $responseObject->optout) {
+                $existing = $message->getLabelIds();
+                if (!in_array($solicitationLabelId, $existing ?? [], true)) {
+                    $mods = new Google_Service_Gmail_ModifyMessageRequest();
+                    $mods->setAddLabelIds([$solicitationLabelId]);
+                    $service->users_messages->modify('me', $message->getId(), $mods);
+                    $count++;
+                }
+            }
             usleep($this->throttleMs * 1000);
-            $count++;
-            // TODO: add Gmail labeling via API
         }
 
         if ($mostRecent) {
             $token->last_scanned_at = $mostRecent;
             $token->save();
         }
+        return $count;
+    }
+    protected function refreshAccessToken(UserToken $token): ?string
+    {
+        $tokenData = $token->token;
+
+        // Bail out if token column does not contain JSON
+        if (!is_array($tokenData)) {
+            Log::warning('Token column is not JSON for token ID ' . $token->id);
+            return null;
+        }
+
+        // If access token is still valid, return it
+        $expiry = ($tokenData['created'] ?? 0) + ($tokenData['expires_in'] ?? 0) - 60;
+        if (time() < $expiry && !empty($tokenData['access_token'])) {
+            return $tokenData['access_token'];
+        }
+
+        $client = new \Google_Client();
+        $client->setAuthConfig(config('services.google.credentials'));
+        $client->setAccessType('offline');
+        $client->refreshToken($token->refresh_token);
+        $accessToken = $client->getAccessToken();
+        $tokenData['access_token'] = $accessToken['access_token'] ?? null;
+        $tokenData['expires_in'] = $accessToken['expires_in'] ?? ($tokenData['expires_in'] ?? 3600);
+        $tokenData['created'] = time();
+        $token->token = $tokenData;
+        $token->save();
+
+        return $tokenData['access_token'];
     }
 
     /**
@@ -82,8 +162,8 @@ class MailScanner
         string $password,
         string $openaiKey,
         string $model = OpenAiModels::GPT_41_NANO
-    ): void {
-        $client = (new ClientManager())->make([
+    ): ?int {
+        $client = (new ImapClientManager())->make([
             'host'          => $host,
             'port'          => $port,
             'encryption'    => $encryption,
@@ -92,21 +172,77 @@ class MailScanner
             'password'      => $password,
             'protocol'      => 'imap',
         ]);
+        try {
+            $client->connect();
+        } catch (\Throwable $e) {
+            Log::error('IMAP login failed: ' . $e->getMessage());
+            return null;
+        }
 
-        $client->connect();
-        $inbox = $client->getFolder('INBOX');
+        $total = 0;
+        $total += $this->processFolder($client, 'INBOX', $openaiKey, $model, "host: $host, username: $username");
+        $total += $this->processFolder($client, 'Junk', $openaiKey, $model, "host: $host, username: $username");
+        return $total;
+    }
 
-        $query = $inbox->messages()->since(Carbon::now()->subDays(2));
+    /**
+     * 
+     */
+    protected function processFolder(ImapClient $client, string $folder, string $openaiKey, string $model, string $label): int
+    {
+        $inbox = $client->getFolder($folder);
+        //
+        $query = $inbox->messages()->since(Carbon::now()->subDays(7));
         if (method_exists($query, 'limit')) {
             $query->limit($this->maxMessages);
         }
         $messages = $query->get();
 
+        $messageCount = $messages->count();
+        Log::channel('mailread')->info("{$folder} {$label} | {$messageCount} messages.");
+        $count = 0;
         foreach ($messages as $message) {
             $body = $message->getTextBody() ?: $message->getHTMLBody();
-            $this->classify($body, $openaiKey, $model);
+            $date = $message->getDate();
+            $subject = $message->getSubject();
+            $fromAttr = $message->getFrom();
+            $from = '';
+            if (is_iterable($fromAttr)) {
+                $parts = [];
+                foreach ($fromAttr as $addr) {
+                    $parts[] = (string) $addr;
+                }
+                $from = implode(', ', $parts);
+            } else {
+                $from = (string) $fromAttr;
+            }
+            // TODO: leave this commented for now
+            // We will enable this at a later time
+            if ( config('services.emailclear.enable_ai') ) {
+                $jsonResponse = $this->classify($body, $openaiKey, $model);
+            } else {
+                $jsonResponse = $this->classifyFake($body, $openaiKey, $model);
+            }
+            Log::channel('mailread')->info("{$jsonResponse}");
+
+            $responseObject = json_decode($jsonResponse);
+            $score = $responseObject->short + $responseObject->pitch + $responseObject->request_call + $responseObject->optout;
+            $timestamp = $date instanceof Carbon ? $date->toIso8601String() : (string) $date;
+            Log::channel('mailread')->info("{$timestamp} | From: {$from} | Subject: {$subject} | Score: {$score}");
+
+
             usleep($this->throttleMs * 1000);
+            $count++;
         }
+        return $count;
+    }
+
+    /**
+     * This is a stub to test this out to make sure everything is flowing correctly.
+     */
+    protected function classifyFake(string $body, string $key, string $model): string
+    {
+        return '{"short": 1,"pitch":1,"request_call":1, "optout":1}';
     }
 
     protected function classify(string $body, string $key, string $model): string
@@ -116,7 +252,7 @@ class MailScanner
             "2. Is it pitching a product or service?\n" .
             "3. Is it requesting a short follow-up call (10-15 minutes)?\n" .
             "4. Does it contain opt-out language?\n" .
-            "Provide each score, and then the total as 'Total'. in JSON format {\"short\": 1,\"pitch\":1,\"request_call\":1, \"optout\":1}\n" .
+            "Provide each score. in JSON format {\"short\": 1,\"pitch\":1,\"request_call\":1, \"optout\":1}\n" .
             "Email:\n{$body}";
 
         $data = [
@@ -136,16 +272,30 @@ class MailScanner
         ]);
 
         $result = json_decode($response->getBody(), true);
+
         return trim($result['choices'][0]['message']['content'] ?? '');
     }
 
-    protected function refreshAccessToken(UserToken $token): string
+    /**
+     * Retrieve the ID for the solicitation label, creating it if necessary.
+     */
+    protected function solicitationLabelId(Google_Service_Gmail $service): string
     {
-        $client = new \Google_Client();
-        $client->setAuthConfig(config('services.google.credentials'));
-        $client->setAccessType('offline');
-        $client->refreshToken($token->refresh_token);
-        $accessToken = $client->getAccessToken();
-        return $accessToken['access_token'];
+        $labelName = 'solicitation';
+        $list = $service->users_labels->listUsersLabels('me');
+        foreach ($list->getLabels() as $label) {
+            if (strtolower($label->getName()) === $labelName) {
+                return $label->getId();
+            }
+        }
+
+        $label = new Google_Service_Gmail_Label();
+        $label->setName($labelName);
+        $label->setLabelListVisibility('labelShow');
+        $label->setMessageListVisibility('show');
+
+        $created = $service->users_labels->create('me', $label);
+
+        return $created->getId();
     }
 }

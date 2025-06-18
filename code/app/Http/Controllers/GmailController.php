@@ -10,19 +10,41 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Socialite\Facades\Socialite;
-
+use Laravel\Socialite\Contracts\Provider;
+use Laravel\Socialite\Two\GoogleProvider;
+use Illuminate\Support\Facades\Log;
 class GmailController extends Controller
 {
     public function redirect()
     {
-        return Socialite::driver('google')
-            ->scopes(['https://mail.google.com/', 'email'])
-            ->redirect();
+        $u = Auth::user();
+        $id = $u->id;
+        //Log::debug(json_encode(config('services.google')));
+        /** @var \Laravel\Socialite\Two\GoogleProvider */
+        $provider = Socialite::driver('google');
+        
+        $staticRedirectUri = config('services.google.redirect');
+        Log::debug("redirectUri {$staticRedirectUri}");
+        $provider->redirectUrl($staticRedirectUri);
+
+        return $provider
+        ->scopes(['https://www.googleapis.com/auth/gmail.modify', 'email'])
+        ->with(['state' => $id])
+        ->redirect();
     }
 
     public function callback(Request $request)
     {
-        $googleUser = Socialite::driver('google')->user();
+        /** @var \Laravel\Socialite\Two\GoogleProvider */
+        $provider = Socialite::driver('google');
+        $provider->redirectUrl(config('services.google.redirect'));
+        $googleUser = $provider->user();
+
+        /** @var \App\Models\User */
+        $u = Auth::user();
+        if (method_exists($u, 'canAddEmail') && !$u->canAddEmail()) {
+            return back(303);
+        }
 
         $token = [
             'access_token'  => $googleUser->token,
@@ -31,18 +53,21 @@ class GmailController extends Controller
             'created'       => time(),
         ];
 
-        Auth::user()->tokens()->create([
+        $u->tokens()->create([
             'email' => $googleUser->email,
             'refresh_token' => $googleUser->refreshToken,
             'token' => $token,
         ]);
-
+        
         return redirect()->route('gmail.edit', status: 303);
     }
-
+    
+    
     public function edit(): Response
     {
-        $tokens = Auth::user()->tokens()->get(['id', 'email']);
+        /** @var Illuminate\Contracts\Auth\Authenticatable */
+        $u = Auth::user();
+        $tokens = $u->tokens()->get(['id', 'email']);
 
         return Inertia::render('settings/Gmail', [
             'tokens' => $tokens,

@@ -42,7 +42,11 @@ return [
 
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
-        'model' => env('OPENAI_MODEL', 'gpt-3.5-turbo'),
+        'model' => env('OPENAI_MODEL', 'gpt-4.1-nano'),
     ],
+    'emailclear' => [
+        'enable_ai' => env('MAIL_SCAN_ENABLE_AI') == 'true',
+    ]
+
 
 ];
