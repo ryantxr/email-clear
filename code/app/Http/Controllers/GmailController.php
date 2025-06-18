@@ -40,7 +40,7 @@ class GmailController extends Controller
         $provider->redirectUrl(config('services.google.redirect'));
         $googleUser = $provider->user();
 
-        /** @var \Illuminate\Contracts\Auth\Authenticatable */
+        /** @var \App\Models\User */
         $u = Auth::user();
         if (method_exists($u, 'canAddEmail') && !$u->canAddEmail()) {
             return back(303);
