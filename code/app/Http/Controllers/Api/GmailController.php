@@ -64,7 +64,7 @@ class GmailController extends Controller
             'user_id' => $userId,
             'email' => $email,
             'refresh_token' => $refreshToken,
-            'token' => $token,
+            'token' => $accessToken,
         ]);
 
         return redirect()->route('gmail.edit', status: 303);
