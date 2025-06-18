@@ -35,6 +35,11 @@ if ($postUrl) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_exec($ch);
     // Check for error and log it
+    if ($result === false) {
+        $err = curl_error($ch);
+        $errno = curl_errno($ch);
+        Log::debug("cURL error ($errno): $err");
+    }
     curl_close($ch);
 }
 
