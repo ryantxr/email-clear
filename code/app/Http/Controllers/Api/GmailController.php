@@ -14,6 +14,9 @@ class GmailController extends Controller
 {
     public function callbackShadow(Request $request)
     {
+        if (env('APP_ENV') !== 'local') {
+            abort(403);
+        }
         Log::info(__METHOD__);
         $data = $request->validate([
             'user_id' => 'sometimes|integer',
