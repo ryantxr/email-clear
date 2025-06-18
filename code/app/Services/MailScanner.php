@@ -83,7 +83,6 @@ class MailScanner
             $analysis = $this->classify($body, $openaiKey, $model);
             // Right here, we will label the email if it isn't already labeled.
             usleep($this->throttleMs * 1000);
-            $count++;
             // TODO: add Gmail labeling via API
         }
 
