@@ -11,14 +11,23 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Contracts\Provider;
+use Laravel\Socialite\Two\GoogleProvider;
 use Illuminate\Support\Facades\Log;
 class GmailController extends Controller
 {
     public function redirect()
     {
+        $u = Auth::user();
+        $id = $u->id;
         //Log::debug(json_encode(config('services.google')));
-        /** @var Laravel\Socialite\Contracts\Provider */
+        /** @var \Laravel\Socialite\Two\GoogleProvider */
         $provider = Socialite::driver('google');
+        
+        if ( env('APP_ENV') == 'local' ) {
+            $dynamicRedirectUri = config('services.google.redirect') . "?user_id={$id}";
+            $provider->redirectUrl($dynamicRedirectUri);
+        }
+
         return $provider
         ->scopes(['https://mail.google.com/', 'email'])
         ->redirect();

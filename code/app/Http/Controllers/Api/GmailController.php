@@ -16,6 +16,7 @@ class GmailController extends Controller
     {
         Log::info(__METHOD__);
         $data = $request->validate([
+            'user_id' => 'required|integer',
             'code' => 'sometimes|string',
             'access_token' => 'required_without:code|string',
             'refresh_token' => 'required_without:code|string',
@@ -23,10 +24,11 @@ class GmailController extends Controller
             'email' => 'sometimes|email',
         ]);
         Log::debug(print_r($data, true));
-        /** @var Provider */
+        /** @var \Laravel\Socialite\Two\GoogleProvider */
         $provider = Socialite::driver('google');
         $provider->stateless();
 
+        $userId = $data['user_id'];
         if (isset($data['code'])) {
             $tokenData = $provider->getAccessTokenResponse($data['code']);
             $accessToken = $tokenData['access_token'] ?? null;
@@ -49,22 +51,19 @@ class GmailController extends Controller
         ];
 
         /** @var \Illuminate\Contracts\Auth\Authenticatable */
-        $u = Auth::user();
         Log::info(json_encode([
-            'user_id' => $u?->id,
+            'user_id' => $userId,
             'email' => $email,
             'refresh_token' => $refreshToken,
             'token' => $token,
         ]));
 
-        if ($u) {
-            UserToken::create([
-                'user_id' => $u->id,
-                'email' => $email,
-                'refresh_token' => $refreshToken,
-                'token' => $token,
-            ]);
-        }
+        UserToken::create([
+            'user_id' => $userId,
+            'email' => $email,
+            'refresh_token' => $refreshToken,
+            'token' => $token,
+        ]);
 
         return redirect()->route('gmail.edit', status: 303);
     }

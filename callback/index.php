@@ -18,6 +18,10 @@ Log::debug("postUrl $postUrl");
 Log::debug("redirectUrl $redirectUrl");
 
 $data = [];
+if (isset($_GET['user_id'])) {
+    Log::debug("User id = " . $_GET['user_id']);
+    $data['user_id'] = $_GET['user_id'];
+}
 if (isset($_GET['code'])) {
     Log::debug("Code = " . $_GET['code']);
     $data['code'] = $_GET['code'];
