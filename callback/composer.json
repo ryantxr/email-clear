@@ -1,0 +1,17 @@
+{
+    "name": "email-clear/callback",
+    "description": "A skinny callback to handle oauth redirect",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "EmailClear\\Callback\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ryan Teixeira",
+            "email": "ryantxr@gmail.com"
+        }
+    ],
+    "require": {}
+}
