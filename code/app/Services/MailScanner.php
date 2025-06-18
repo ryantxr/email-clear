@@ -30,6 +30,10 @@ class MailScanner
     public function scanGmail(UserToken $token, string $username, string $openaiKey, string $model = OpenAiModels::GPT_41_NANO): void
     {
         $accessToken = $this->refreshAccessToken($token);
+        if (!$accessToken) {
+            Log::warning('Skipping scan: invalid token for ID ' . $token->id);
+            return;
+        }
 
         $client = (new ImapClientManager())->make([
             'host'           => 'imap.gmail.com',
@@ -73,15 +77,34 @@ class MailScanner
             $token->save();
         }
     }
-
-    protected function refreshAccessToken(UserToken $token): string
+    protected function refreshAccessToken(UserToken $token): ?string
     {
+        $tokenData = $token->token;
+
+        // Bail out if token column does not contain JSON
+        if (!is_array($tokenData)) {
+            Log::warning('Token column is not JSON for token ID ' . $token->id);
+            return null;
+        }
+
+        // If access token is still valid, return it
+        $expiry = ($tokenData['created'] ?? 0) + ($tokenData['expires_in'] ?? 0) - 60;
+        if (time() < $expiry && !empty($tokenData['access_token'])) {
+            return $tokenData['access_token'];
+        }
+
         $client = new \Google_Client();
         $client->setAuthConfig(config('services.google.credentials'));
         $client->setAccessType('offline');
         $client->refreshToken($token->refresh_token);
         $accessToken = $client->getAccessToken();
-        return $accessToken['access_token'];
+        $tokenData['access_token'] = $accessToken['access_token'] ?? null;
+        $tokenData['expires_in'] = $accessToken['expires_in'] ?? ($tokenData['expires_in'] ?? 3600);
+        $tokenData['created'] = time();
+        $token->token = $tokenData;
+        $token->save();
+
+        return $tokenData['access_token'];
     }
 
     /**
@@ -202,5 +225,4 @@ class MailScanner
         $result = json_decode($response->getBody(), true);
         return trim($result['choices'][0]['message']['content'] ?? '');
     }
-
 }
