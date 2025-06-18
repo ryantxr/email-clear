@@ -10,11 +10,12 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Socialite\Facades\Socialite;
-
+use Illuminate\Support\Facades\Log;
 class GmailController extends Controller
 {
     public function redirect()
     {
+        //Log::debug(json_encode(config('services.google')));
         return Socialite::driver('google')
             ->scopes(['https://mail.google.com/', 'email'])
             ->redirect();
