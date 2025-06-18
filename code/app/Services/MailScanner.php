@@ -9,6 +9,8 @@ use GuzzleHttp\Client as HttpClient;
 use Illuminate\Support\Facades\Log;
 use Webklex\PHPIMAP\ClientManager as ImapClientManager;
 use Webklex\PHPIMAP\Client as ImapClient;
+use Google_Client;
+use Google_Service_Gmail;
 
 class MailScanner
 {
@@ -32,39 +34,52 @@ class MailScanner
         $accessToken = $this->refreshAccessToken($token);
         if (!$accessToken) {
             Log::warning('Skipping scan: invalid token for ID ' . $token->id);
-            return;
+            return 0;
         }
 
-        $client = (new ImapClientManager())->make([
-            'host'           => 'imap.gmail.com',
-            'port'           => 993,
-            'encryption'     => 'ssl',
-            'validate_cert'  => true,
-            'username'       => $username,
-            'password'       => $accessToken,
-            'authentication' => 'oauth',
+        $googleClient = new Google_Client();
+        $googleClient->setAuthConfig(config('services.google.credentials'));
+        $googleClient->setAccessToken(['access_token' => $accessToken]);
+
+        $service = new Google_Service_Gmail($googleClient);
+
+        $after = $token->last_scanned_at
+            ? 'after:' . $token->last_scanned_at->timestamp
+            : 'newer_than:7d';
+        $list = $service->users_messages->listUsersMessages('me', [
+            'q' => $after,
+            'maxResults' => $this->maxMessages,
         ]);
-
-        $client->connect();
-        $inbox = $client->getFolder('INBOX');
-
-        $query = $inbox->messages()->since($token->last_scanned_at ?: Carbon::now()->subDays(7));
-        if (method_exists($query, 'limit')) {
-            $query->limit($this->maxMessages);
-        }
-        $messages = $query->get();
+        $messages = $list->getMessages() ?? [];
 
         $mostRecent = $token->last_scanned_at;
         $count = 0;
-        foreach ($messages as $message) {
+        foreach ($messages as $ref) {
             if ($count >= $this->maxMessages) {
                 break;
             }
-            $date = $message->getDate();
+            $message = $service->users_messages->get('me', $ref->getId(), ['format' => 'full']);
+            $internalDate = (int) $message->getInternalDate();
+            $date = Carbon::createFromTimestampMs($internalDate);
             if (!$mostRecent || $date->gt($mostRecent)) {
                 $mostRecent = $date;
             }
-            $body = $message->getTextBody() ?: $message->getHTMLBody();
+
+            $payload = $message->getPayload();
+            $bodyData = $payload->getBody()->getData();
+            if (!$bodyData && $payload->getParts()) {
+                foreach ($payload->getParts() as $part) {
+                    if ($part->getMimeType() === 'text/plain' && $part->getBody()) {
+                        $bodyData = $part->getBody()->getData();
+                        break;
+                    }
+                }
+            }
+            $body = $bodyData ? base64_decode(strtr($bodyData, '-_', '+/')) : '';
+            if (!$body) {
+                $body = $message->getSnippet();
+            }
+
             $analysis = $this->classify($body, $openaiKey, $model);
             // Right here, we will label the email if it isn't already labeled.
             usleep($this->throttleMs * 1000);
