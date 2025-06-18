@@ -36,7 +36,7 @@ class GoogleConfigServiceProvider extends ServiceProvider
                 $credentials = $json ?? [];
             }
         }
-
+        // This sets a default redirect_uri but notice below that the value is set from the credentials file.
         $defaultRedirect = rtrim(config('app.url'), '/') . '/settings/gmail/callback';
 
         config([

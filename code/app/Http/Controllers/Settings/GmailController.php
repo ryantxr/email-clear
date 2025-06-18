@@ -1,7 +1,11 @@
 <?php
 
 namespace App\Http\Controllers\Settings;
-
+/*
+Yes, I know this controller isn't used.
+I plan to keep this as a reference since it implements
+oauth with directly with the google client.
+*/
 use App\Http\Controllers\Controller;
 use App\Models\UserToken;
 use Google_Client;

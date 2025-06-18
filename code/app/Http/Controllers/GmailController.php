@@ -10,13 +10,16 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Contracts\Provider;
 use Illuminate\Support\Facades\Log;
 class GmailController extends Controller
 {
     public function redirect()
     {
         //Log::debug(json_encode(config('services.google')));
-        return Socialite::driver('google')
+        /** @var Laravel\Socialite\Contracts\Provider */
+        $provider = Socialite::driver('google');
+        return $provider
             ->scopes(['https://mail.google.com/', 'email'])
             ->redirect();
     }
@@ -32,18 +35,22 @@ class GmailController extends Controller
             'created'       => time(),
         ];
 
-        Auth::user()->tokens()->create([
+        /** @var Illuminate\Contracts\Auth\Authenticatable */
+        $u = Auth::user();
+        $u->tokens()->create([
             'email' => $googleUser->email,
             'refresh_token' => $googleUser->refreshToken,
             'token' => $token,
         ]);
-
+        
         return redirect()->route('gmail.edit', status: 303);
     }
-
+    
     public function edit(): Response
     {
-        $tokens = Auth::user()->tokens()->get(['id', 'email']);
+        /** @var Illuminate\Contracts\Auth\Authenticatable */
+        $u = Auth::user();
+        $tokens = $u->tokens()->get(['id', 'email']);
 
         return Inertia::render('settings/Gmail', [
             'tokens' => $tokens,
