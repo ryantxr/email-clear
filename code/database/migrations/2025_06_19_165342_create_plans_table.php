@@ -21,6 +21,8 @@ return new class extends Migration
 
             // Features as a JSON array, e.g. {"features":["feature1","feature2"]}
             $table->json('features')->nullable()->comment('JSON array of plan features');
+            $table->unsignedTinyInteger('max_emails')->default(1)->comment('Max email addresses for this plan');
+            $table->unsignedSmallInteger('max_messages')->default(100)->comment('Max messages scanned for this plan');
             $table->timestamps();
         });
         DB::table('plans')->updateOrInsert(
