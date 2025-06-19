@@ -22,7 +22,7 @@ return new class extends Migration
             // user_id: unsigned FK to users
             $table->unsignedBigInteger('user_id')->nullable()->default(null)
                 ->comment('Foreign key to users table');
-            $table->decimal('price')->nullable()->default(null);
+            $table->decimal('price', 8, 2)->nullable()->default(null);
             // start_at: datetime when started (nullable)
             $table->dateTime('start_at')->nullable()->comment('Datetime when subscription started');
 

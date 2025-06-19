@@ -18,6 +18,8 @@ return new class extends Migration
 
             // Longer description of the plan
             $table->string('description')->nullable()->comment('Detailed plan description');
+            $table->decimal('price', 8, 2)->nullable()->default(null);
+            $table->unsignedTinyInteger('frequency')->default(60)->comment('Scan every this many minutes');
 
             // Features as a JSON array, e.g. {"features":["feature1","feature2"]}
             $table->json('features')->nullable()->comment('JSON array of plan features');
@@ -27,6 +29,10 @@ return new class extends Migration
         });
         DB::table('plans')->updateOrInsert(
             ['name' => 'Free'],
+            ['price' => 0],
+            ['max_emails' => 1],
+            ['max_messages' => 100],
+            ['frequency' => 60],
             ['description' => 'Ideal for small volume and occassional use.'],
             ['features' => json_encode([
                 'data' => [
@@ -35,11 +41,15 @@ return new class extends Migration
                     'Scans once per hour',
                     'Email analytics dashboard',
                     'Email support',
-                ]
+                    ]
             ])]
         );
         DB::table('plans')->updateOrInsert(
             ['name' => 'Pro'],
+            ['price' => 9],
+            ['max_emails' => 5],
+            ['max_messages' => 1000],
+            ['frequency' => 5],
             ['description' => 'Good for more volume or multiple email addresses.'],
             ['features' => json_encode([
                 'data' => [
