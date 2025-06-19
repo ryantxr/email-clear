@@ -2,16 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Models\Setting;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\BillingController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\Admin\SiteContentController;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'frontPageText' => Setting::where('key', 'front_page_text')->value('value'),
-        'pricing' => Setting::where('key', 'pricing')->value('value'),
-    ]);
-})->name('home');
+Route::get('/', HomeController::class)->name('home');
+
+Route::get('billing', BillingController::class)->name('billing');
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
