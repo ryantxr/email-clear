@@ -26,6 +26,10 @@ const sidebarNavItems: NavItem[] = [
         title: 'IMAP',
         href: '/settings/imap',
     },
+    {
+        title: 'Billing',
+        href: '/billing',
+    },
 ];
 
 const page = usePage();

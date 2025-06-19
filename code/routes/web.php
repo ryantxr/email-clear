@@ -3,10 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\BillingController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\Admin\SiteContentController;
 
 Route::get('/', HomeController::class)->name('home');
+
+Route::get('billing', BillingController::class)->name('billing');
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
