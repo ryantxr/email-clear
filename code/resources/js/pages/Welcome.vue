@@ -99,6 +99,7 @@ const props = defineProps<Props>();
                         class="rounded bg-gradient-to-r from-blue-500 to-purple-700 px-6 py-3 text-white">Start free
                     trial
                     </Link>
+<!-- 
                     <Link href="#" class="flex items-center space-x-2 text-gray-300">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -108,6 +109,7 @@ const props = defineProps<Props>();
                     </svg>
                     <span>Watch demo</span>
                     </Link>
+                     -->
                 </div>
             </section>
 
@@ -188,7 +190,7 @@ const props = defineProps<Props>();
         <section class="mb-8 text-center text-gray-400 ">
             <div class="mx-auto grid max-w-5xl grid-cols-3 gap-6">
                 <div v-for="plan in props.plans" :key="plan.id"
-                    :class="['relative flex flex-col items-center py-6 space-y-6 bg-black rounded-lg xw-96', plan.name === 'Pro' ? 'border border-blue-700' : 'border border-gray-600']">
+                    :class="['relative flex flex-col items-center py-6 space-y-6 bg-black rounded-lg h-96 xw-96', plan.name === 'Pro' ? 'border border-blue-700' : 'border border-gray-600']">
                     <div class="text-4xl font-bold">
                         {{ plan.name }}
                     </div>
@@ -213,7 +215,7 @@ const props = defineProps<Props>();
                         </button>
                     </div>
                 </div>
-                <div class="relative flex flex-col items-center py-6 space-y-6 bg-black rounded-lg xw-96 border border-gray-600">
+                <div class="relative flex flex-col items-center py-6 space-y-6 bg-black rounded-lg h-96 xw-96 border border-gray-600">
                     <div class="text-4xl font-bold">
                         Enterprise
                     </div>
