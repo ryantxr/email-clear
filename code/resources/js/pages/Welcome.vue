@@ -2,9 +2,18 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { Brain, Zap, Shield, ChartColumn, Clock, Lock } from 'lucide-vue-next';
 
+interface PlanInfo {
+    id: number;
+    name: string;
+    description: string | null;
+    price: number | null;
+    features: { data?: string[] } | string[];
+}
+
 interface Props {
     frontPageText: string | null;
     pricing: string | null;
+    plans: PlanInfo[];
 }
 
 const props = defineProps<Props>();
@@ -175,198 +184,37 @@ const props = defineProps<Props>();
                     AI-powered
                     email cleaning features.</p>
 
-            </section>
-            <section class="mb-8 text-center text-gray-400 ">
-                <div class="grid max-w-5xl grid-cols-3 gap-6 mx-auto">
-                    <div
-                        class="flex flex-col items-center py-6 space-y-6 bg-black border border-gray-600 rounded-lg xw-96">
-                        <div class="text-4xl font-bold">
-                            Free
-                        </div>
-                        <div class="text-2xl font-bold text-gray-100 ">$0</div>
-                        <div class="w-full">
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-                                </span>
-                                <span class="inline-block">One email address</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">100 scanned emails a month</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">Email analytics dashboard</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">Email support</span>
-                            </div>
-                        </div>
-                        <div class="">
-                            <button class="px-3 py-2 text-black bg-gray-300 border border-gray-700 rounded-md">
-                                Choose Plan
-                            </button>
+        </section>
+        <section class="mb-8 text-center text-gray-400 ">
+            <div class="mx-auto grid max-w-5xl grid-cols-3 gap-6">
+                <div v-for="plan in props.plans" :key="plan.id"
+                    :class="['flex flex-col items-center py-6 space-y-6 bg-black rounded-lg xw-96', plan.name === 'Pro' ? 'border border-blue-700' : 'border border-gray-600']">
+                    <div class="text-4xl font-bold">
+                        {{ plan.name }}
+                    </div>
+                    <div class="text-2xl font-bold text-gray-100">
+                        ${{ plan.price }}<span v-if="plan.price && plan.price > 0" class="text-sm font-regular">/month</span>
+                    </div>
+                    <div class="w-full">
+                        <div v-for="feature in (plan.features.data ?? plan.features)" :key="feature" class="flex items-center ml-8">
+                            <span class="inline-block mr-3">
+                                <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                            </span>
+                            <span class="inline-block">{{ feature }}</span>
                         </div>
                     </div>
-                    <div
-                        class="flex flex-col items-center py-6 space-y-6 bg-black border border-blue-700 rounded-lg xw-96">
-                        <div class="text-4xl font-bold">
-                            Pro
-                        </div>
-                        <div class="text-2xl font-bold text-gray-100 ">$9/<span
-                                class="text-sm font-regular">month</span>
-                        </div>
-                        <div class="w-full">
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-                                </span>
-                                <span class="inline-block">5 email addresses</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">1000 emails per month</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">Priority email filtering</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">Custom rules &amp; exceptions</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">Priority support</span>
-                            </div>
-                        </div>
-                        <div class="">
-                            <button
-                                class="px-3 py-2 text-white border border-gray-700 rounded-md bg-gradient-to-r from-blue-500 to-purple-700">
-                                Choose Plan
-                            </button>
-                        </div>
-                    </div>
-                    <div
-                        class="flex flex-col items-center py-6 space-y-6 bg-black border border-gray-600 rounded-lg xw-96">
-                        <div class="text-4xl font-bold">
-                            Super
-                        </div>
-                        <div class="text-2xl font-bold text-gray-100 ">$59/<span
-                                class="text-sm font-regular">month</span>
-                        </div>
-                        <div class="w-full">
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-                                </span>
-                                <span class="inline-block">Everything in Pro</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">Team management dashboard</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-
-                                </span>
-                                <span class="inline-block">Priority support</span>
-                            </div>
-                            <div class="flex items-center ml-8">
-                                <span class="inline-block mr-3">
-                                    <svg class="w-6 text-green-500 size-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-                                </span>
-                                <span class="inline-block">Custom integrations</span>
-                            </div>
-                        </div>
-                        <div class="">
-                            <button class="px-3 py-2 text-black bg-gray-300 border border-gray-700 rounded-md">
-                                Choose Plan
-                            </button>
-                        </div>
-
+                    <div>
+                        <button
+                            :class="plan.name === 'Pro' ? 'px-3 py-2 text-white border border-gray-700 rounded-md bg-gradient-to-r from-blue-500 to-purple-700' : 'px-3 py-2 text-black bg-gray-300 border border-gray-700 rounded-md'">
+                            Choose Plan
+                        </button>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
             <section class="text-center space-y-4">
                 <h2 class="text-5xl font-bold">Frequently asked <span
                         class="bg-gradient-to-r from-blue-500 to-purple-700 bg-clip-text text-transparent">questions</span>
