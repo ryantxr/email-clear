@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import type { BreadcrumbItem } from '@/types';
 
 interface PlanInfo {
@@ -20,7 +20,7 @@ const props = defineProps<Props>();
 const form = useForm({});
 
 const upgrade = () => {
-    form.post(route('billing.upgrade'));
+    router.get(route('billing.checkout'));
 };
 
 const cancel = () => {
