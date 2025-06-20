@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -29,38 +30,43 @@ return new class extends Migration
         });
         DB::table('plans')->updateOrInsert(
             ['name' => 'Free'],
-            ['price' => 0],
-            ['max_emails' => 1],
-            ['max_messages' => 100],
-            ['frequency' => 60],
-            ['description' => 'Ideal for small volume and occassional use.'],
-            ['features' => json_encode([
-                'data' => [
-                    '1 email address',
-                    '100 scanned emails a month',
-                    'Scans once per hour',
-                    'Email analytics dashboard',
-                    'Email support',
-                    ]
-            ])]
+            [
+                'price' => 0,
+                'max_emails' => 1,
+                'max_messages' => 100,
+                'frequency' => 60,
+                'description' => 'Ideal for small volume and occassional use.',
+                'features' => json_encode([
+                    'data' => [
+                        '1 email address',
+                        '100 scanned emails a month',
+                        'Scans once per hour',
+                        'Email analytics dashboard',
+                        'Email support',
+                    ],
+                ]),
+            ]
         );
+
         DB::table('plans')->updateOrInsert(
             ['name' => 'Pro'],
-            ['price' => 9],
-            ['max_emails' => 5],
-            ['max_messages' => 1000],
-            ['frequency' => 5],
-            ['description' => 'Good for more volume or multiple email addresses.'],
-            ['features' => json_encode([
-                'data' => [
-                    '5 email addresses',
-                    '1000 emails per month',
-                    'Scans every 5 minutes',
-                    'Priority email filtering',
-                    'Custom rules & exceptions',
-                    'Priority support',
-                ]
-            ])]
+            [
+                'price' => 9,
+                'max_emails' => 5,
+                'max_messages' => 1000,
+                'frequency' => 5,
+                'description' => 'Good for more volume or multiple email addresses.',
+                'features' => json_encode([
+                    'data' => [
+                        '5 email addresses',
+                        '1000 emails per month',
+                        'Scans every 5 minutes',
+                        'Priority email filtering',
+                        'Custom rules & exceptions',
+                        'Priority support',
+                    ],
+                ]),
+            ]
         );
     }
 
