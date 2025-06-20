@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import type { BreadcrumbItem } from '@/types';
 
 interface PlanInfo {
@@ -13,9 +13,19 @@ interface PlanInfo {
 
 interface Props {
     plans: PlanInfo[];
+    currentPlan: string;
 }
 
 const props = defineProps<Props>();
+const form = useForm({});
+
+const upgrade = () => {
+    form.post(route('billing.upgrade'));
+};
+
+const cancel = () => {
+    form.post(route('billing.cancel'));
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Billing', href: '/billing' },
@@ -27,6 +37,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         <Head title="Billing" />
         <div class="mx-auto max-w-6xl space-y-8 p-4">
             <h1 class="text-center text-3xl font-bold">Choose your plan</h1>
+            <p class="text-center text-gray-400">Current plan: {{ props.currentPlan }}</p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div
                     v-for="plan in props.plans"
@@ -60,9 +71,19 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </div>
                     </div>
                     <div class="absolute bottom-6 left-1/2 -translate-x-1/2">
-                        <button class="rounded-md border border-gray-700 bg-gradient-to-r from-blue-500 to-purple-700 px-3 py-2 text-white">
-                            Checkout
-                        </button>
+                        <template v-if="plan.name.toLowerCase() === props.currentPlan">
+                            <span class="text-sm text-gray-400">Current Plan</span>
+                        </template>
+                        <template v-else-if="plan.name === 'Pro' && props.currentPlan === 'free'">
+                            <button class="rounded-md border border-gray-700 bg-gradient-to-r from-blue-500 to-purple-700 px-3 py-2 text-white" @click="upgrade">
+                                Upgrade
+                            </button>
+                        </template>
+                        <template v-else-if="plan.name === 'Pro' && props.currentPlan === 'pro'">
+                            <button class="rounded-md border border-gray-700 bg-gray-600 px-3 py-2 text-white" @click="cancel">
+                                Cancel
+                            </button>
+                        </template>
                     </div>
                 </div>
             </div>
