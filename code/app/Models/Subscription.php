@@ -14,6 +14,8 @@ class Subscription extends Model
         'last_charged_at',
         'paused_at',
         'end_at',
+        'stripe_customer_id',
+        'stripe_subscription_id',
         'status',
     ];
 
