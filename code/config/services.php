@@ -48,7 +48,6 @@ return [
     'stripe' => [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
-        'price' => env('STRIPE_PRO_PRICE'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
     'emailclear' => [
