@@ -29,7 +29,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 onMounted(async () => {
     stripe = await loadStripe(props.publishableKey);
     if (!stripe) return;
-    const resp = await fetch(route('billing.intent'), { method: 'POST' });
+    const token =
+        document.querySelector("meta[name='csrf-token']")?.getAttribute('content');
+    const resp = await fetch(route('billing.intent'), {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': token ?? '',
+        },
+    });
     const { clientSecret } = await resp.json();
     elements = stripe.elements({ clientSecret });
     const payment = elements.create('payment');
