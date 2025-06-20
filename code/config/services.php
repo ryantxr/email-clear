@@ -44,6 +44,13 @@ return [
         'key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-4.1-nano'),
     ],
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'price' => env('STRIPE_PRO_PRICE'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
     'emailclear' => [
         'enable_ai' => env('MAIL_SCAN_ENABLE_AI') == 'true',
     ]

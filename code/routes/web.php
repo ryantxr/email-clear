@@ -12,6 +12,9 @@ Route::get('/', HomeController::class)->name('home');
 
 Route::get('billing', BillingController::class)->name('billing');
 Route::middleware('auth')->group(function () {
+    Route::get('billing/checkout', [SubscriptionController::class, 'checkout'])->name('billing.checkout');
+    Route::post('billing/intent', [SubscriptionController::class, 'intent'])->name('billing.intent');
+    Route::get('billing/success', [SubscriptionController::class, 'success'])->name('billing.success');
     Route::post('billing/upgrade', [SubscriptionController::class, 'upgrade'])->name('billing.upgrade');
     Route::post('billing/cancel', [SubscriptionController::class, 'cancel'])->name('billing.cancel');
 });
