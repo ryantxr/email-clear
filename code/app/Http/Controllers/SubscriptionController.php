@@ -7,6 +7,9 @@ use App\Models\Subscription;
 use Stripe\StripeClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use Stripe\StripeClient;
 
 class SubscriptionController extends Controller
 {
@@ -61,6 +64,7 @@ class SubscriptionController extends Controller
         $stripe = new StripeClient(config('services.stripe.secret'));
         $session = $stripe->checkout->sessions->retrieve($sessionId, []);
 
+
         $user = $request->user();
         $plan = Plan::where('name', 'Pro')->firstOrFail();
 
@@ -69,9 +73,17 @@ class SubscriptionController extends Controller
             'plan_id' => $plan->id,
             'price' => $plan->price,
             'start_at' => now(),
+
             'stripe_customer_id' => $session->customer,
             'stripe_subscription_id' => $session->subscription,
             'status' => 0,
+        ]);
+
+        Charge::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'amount' => $plan->price,
+            'status' => 100,
         ]);
 
         $user->plan = 'pro';

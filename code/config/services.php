@@ -48,6 +48,7 @@ return [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'price' => env('STRIPE_PRO_PRICE'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
     'emailclear' => [
         'enable_ai' => env('MAIL_SCAN_ENABLE_AI') == 'true',
