@@ -67,7 +67,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             >
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                             </svg>
-                            <span>{{ feature }}</span>
+                            <span class="text-gray-100">{{ feature }}</span>
                         </div>
                     </div>
                     <div class="absolute bottom-6 left-1/2 -translate-x-1/2">
@@ -75,12 +75,12 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <span class="text-sm text-gray-400">Current Plan</span>
                         </template>
                         <template v-else-if="plan.name === 'Pro' && props.currentPlan === 'free'">
-                            <button class="rounded-md border border-gray-700 bg-gradient-to-r from-blue-500 to-purple-700 px-3 py-2 text-white" @click="upgrade">
+                            <button class="cursor-pointer rounded-md border border-gray-700 bg-gradient-to-r from-blue-500 to-purple-700 px-3 py-2 text-white" @click="upgrade">
                                 Upgrade
                             </button>
                         </template>
                         <template v-else-if="plan.name === 'Pro' && props.currentPlan === 'pro'">
-                            <button class="rounded-md border border-gray-700 bg-gray-600 px-3 py-2 text-white" @click="cancel">
+                            <button class="cursor-pointer rounded-md border border-gray-700 bg-gray-600 px-3 py-2 text-white" @click="cancel">
                                 Cancel
                             </button>
                         </template>

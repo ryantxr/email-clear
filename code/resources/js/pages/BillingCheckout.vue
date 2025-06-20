@@ -58,7 +58,7 @@ const pay = async () => {
             </p>
             <div id="payment-element" v-show="paymentElementMounted"></div>
             <button
-                class="mt-4 w-full rounded bg-blue-600 py-2 text-white"
+                class="cursor-pointer mt-4 w-full rounded bg-blue-600 py-2 text-white"
                 @click="pay"
             >
                 Pay
