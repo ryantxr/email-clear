@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\UserToken;
 use App\Models\Setting;
+use App\Models\Subscription;
 
 class User extends Authenticatable
 {
@@ -126,5 +127,13 @@ class User extends Authenticatable
         }
         $this->monthly_scanned += $amount;
         $this->save();
+    }
+
+    /**
+     * Active subscription for the user.
+     */
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class)->latestOfMany();
     }
 }
